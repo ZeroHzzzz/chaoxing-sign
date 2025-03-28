@@ -2,93 +2,116 @@ package chao
 
 import (
 	"bytes"
+	"chaoxing/internal/globals"
+	"chaoxing/internal/models"
 	"context"
+	"crypto/aes"
 	"crypto/cipher"
-	"crypto/des"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
+	"net/http"
+	"reflect"
+
+	"dario.cat/mergo"
 )
 
-var key = []byte("u2oh6Vu^HWe40fj")
+// 使用 AES-CBC 模式加密消息
+func encryptByAES(message, key string) (string, error) {
+	keyBytes := []byte(key)
+	iv := keyBytes // IV 和密钥相同
 
-type UserCookieType struct {
-	Fid   string `json:"fid"`
-	Pid   string `json:"pid"`
-	Refer string `json:"refer"`
-	Blank string `json:"_blank"`
-	T     bool   `json:"t"`
-	Vc3   string `json:"vc3"`
-	Uid   string `json:"_uid"`
-	D     string `json:"_d"`
-	Uf    string `json:"uf"`
-	Lv    string `json:"lv"`
-}
-
-var DefaultParams = UserCookieType{
-	Fid:   "-1",
-	Pid:   "-1",
-	Refer: "http%3A%2F%2Fi.chaoxing.com",
-	Blank: "1",
-	T:     true,
-	Vc3:   "",
-	Uid:   "",
-	D:     "",
-	Uf:    "",
-	Lv:    "",
-}
-
-func encoder(password string, key []byte) (string, error) {
-	block, err := des.NewCipher(key)
+	// 创建 AES 加密块
+	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return "", err
 	}
 
-	// 填充密码以满足块大小要求
-	padding := block.BlockSize() - len(password)%block.BlockSize()
+	// 填充明文到块大小的整数倍
+	blockSize := block.BlockSize()
+	plainText := pkcs7Padding([]byte(message), blockSize)
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+
+	cipherText := make([]byte, len(plainText))
+	mode.CryptBlocks(cipherText, plainText)
+
+	return base64.StdEncoding.EncodeToString(cipherText), nil
+}
+
+// PKCS7 填充
+func pkcs7Padding(data []byte, blockSize int) []byte {
+	padding := blockSize - len(data)%blockSize
 	padText := bytes.Repeat([]byte{byte(padding)}, padding)
-	passwordBytes := append([]byte(password), padText...)
+	return append(data, padText...)
+}
 
-	// 加密
-	ciphertext := make([]byte, len(passwordBytes))
-	mode := cipher.NewCBCEncrypter(block, key[:block.BlockSize()])
-	mode.CryptBlocks(ciphertext, passwordBytes)
+func parseCookie(cookies []*http.Cookie) models.UserCookieType {
+	// Reflection
+	var cookie models.UserCookieType
+	val := reflect.ValueOf(&cookie).Elem()
+	typ := val.Type()
 
-	// 返回 Base64 编码后的密文
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
+	for i := range val.NumField() {
+		field := typ.Field(i)
+		jsonTag := field.Tag.Get("json")
+		if jsonTag == "" {
+			continue
+		}
+
+		for _, cookie := range cookies {
+			if cookie.Name == jsonTag {
+				fieldVal := val.Field(i)
+				if fieldVal.CanSet() {
+					switch field.Type.Kind() {
+					case reflect.String:
+						fieldVal.SetString(cookie.Value)
+					case reflect.Bool:
+						value := cookie.Value == "true" || cookie.Value == "1"
+						fieldVal.SetBool(value)
+					}
+				}
+				break
+			}
+		}
+	}
+	return cookie
 }
 
 func (c *Chao) LoginByPass(ctx context.Context, username string, password string) error {
-	encryptedPassword, err := encoder(password, key)
+	encryptedPassword, err := encryptByAES(password, globals.Secret)
+	if err != nil {
+		return err
+	}
+
+	encryptedUsername, err := encryptByAES(username, globals.Secret)
 	if err != nil {
 		return err
 	}
 
 	formData := map[string]string{
-		"uname":            username,
+		"uname":            encryptedUsername,
 		"password":         encryptedPassword,
 		"fid":              "-1",
 		"t":                "true",
-		"refer":            "https%253A%252F%252Fi.chaoxing.com",
+		"refer":            "https://i.chaoxing.com",
 		"forbidotherlogin": "0",
 		"validate":         "",
 	}
 
-	// 使用 resty 发送请求
-	client := c.rty
+	client := c.rtyClient
 	resp, err := client.R().
 		SetFormData(formData).
 		SetHeader("Content-Type", "application/x-www-form-urlencoded").
 		SetHeader("X-Requested-With", "XMLHttpRequest").
-		Post("LOGIN.URL")
+		Post(globals.LOGIN_URL)
 
 	if err != nil {
 		return err
 	}
 
 	// 解析 JSON 响应
-	var result map[string]interface{}
+	var result map[string]any
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
 		return err
@@ -102,41 +125,33 @@ func (c *Chao) LoginByPass(ctx context.Context, username string, password string
 	}
 
 	// 获取 Set-Cookie
-	cookies := resp.Header().Values("Set-Cookie")
+	cookies := resp.Cookies()
 	if len(cookies) == 0 {
 		fmt.Println("网络异常，未获取到 Cookie")
 		return err
 	}
 
-	// 解析 Cookie 并存入 Map
-	cookieMap := make(map[string]string)
-	for _, cookie := range cookies {
-		parts := strings.Split(cookie, ";")
-		for _, part := range parts {
-			kv := strings.Split(strings.TrimSpace(part), "=")
-			if len(kv) == 2 {
-				cookieMap[kv[0]] = kv[1]
-			}
-		}
+	cookie := models.UserCookieType{
+		Fid:   "-1",
+		Pid:   "-1",
+		Refer: "https://i.chaoxing.com",
+		Blank: "1",
+		T:     true,
+		Vc3:   "",
+		Uid:   "",
+		D:     "",
+		Uf:    "",
+		Lv:    "",
 	}
 
-	// 合并默认参数和 Cookie
-	loginResult := DefaultParams
-	for key, value := range cookieMap {
-		switch key {
-		case "_uid":
-			loginResult.Uid = value
-		case "_d":
-			loginResult.D = value
-		case "uf":
-			loginResult.Uf = value
-		case "lv":
-			loginResult.Lv = value
-		case "vc3":
-			loginResult.Vc3 = value
-		}
+	userCookie := parseCookie(cookies)
+
+	err = mergo.Merge(&cookie, userCookie)
+	if err != nil {
+		fmt.Printf("合并失败: %v\n", err)
+		return err
 	}
 
-	fmt.Println("登录成功")
+	fmt.Printf("登录成功: %v\n", cookie)
 	return nil
 }

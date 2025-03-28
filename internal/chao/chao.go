@@ -7,11 +7,11 @@ import (
 )
 
 type Chao struct {
-	rty *resty.Client
+	rtyClient *resty.Client
 }
 
 func NewChao(rty *resty.Client) *Chao {
-	return &Chao{rty: rty}
+	return &Chao{rtyClient: rty}
 }
 
 type Chaos interface {
