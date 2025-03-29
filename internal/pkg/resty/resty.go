@@ -11,19 +11,19 @@ var (
 	once   sync.Once
 )
 
-func initClient() {
+func initRty() {
 	client = resty.New().
 		SetRedirectPolicy(resty.NoRedirectPolicy()).
 		SetCookieJar(nil)
 }
 
-func GetClient() *resty.Client {
-	once.Do(initClient)
+func GetRty() *resty.Client {
+	once.Do(initRty)
 	return client
 }
 
 func HttpSendPost(url string, req map[string]any, headers map[string]string, resp any) (*resty.Response, error) {
-	client := GetClient()
+	client := GetRty()
 
 	r, err := client.R().
 		SetHeaders(headers).
@@ -38,7 +38,7 @@ func HttpSendPost(url string, req map[string]any, headers map[string]string, res
 }
 
 func HttpSendGet(url string, headers map[string]string, query map[string]string, body map[string]any, resp any) (*resty.Response, error) {
-	client := GetClient()
+	client := GetRty()
 
 	req := client.R()
 

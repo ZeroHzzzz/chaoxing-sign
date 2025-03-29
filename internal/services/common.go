@@ -1,13 +1,20 @@
 package services
 
 import (
-	"chaoxing/internal/chao"
-
 	"github.com/go-resty/resty/v2"
+	"github.com/redis/go-redis/v9"
 )
 
-var c *chao.Chao
+type ServiceContext struct {
+	Rty *resty.Client
+	Rdb *redis.Client
+}
 
-func ServiceInit(rtyClient *resty.Client) {
-	c = chao.NewChao(rtyClient)
+var svc *ServiceContext
+
+func ServiceInit(rty *resty.Client, rdb *redis.Client) {
+	svc = &ServiceContext{
+		Rty: rty,
+		Rdb: rdb,
+	}
 }

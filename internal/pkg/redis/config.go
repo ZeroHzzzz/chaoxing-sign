@@ -2,8 +2,6 @@ package redis
 
 import (
 	"chaoxing/internal/globals"
-
-	"github.com/go-redis/redis/v8"
 )
 
 type RedisInfoConfig struct {
@@ -11,15 +9,6 @@ type RedisInfoConfig struct {
 	Port     string
 	DB       int
 	Password string
-}
-
-func getRedisClient(info RedisInfoConfig) *redis.Client {
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     info.Host + ":" + info.Port,
-		Password: info.Password,
-		DB:       info.DB,
-	})
-	return redisClient
 }
 
 // func defaultRedisConfig() RedisInfoConfig {
