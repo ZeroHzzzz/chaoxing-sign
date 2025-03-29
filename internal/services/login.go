@@ -76,7 +76,7 @@ func LoginByPass(ctx context.Context, username string, password string) error {
 		Lv:    "",
 	}
 
-	userCookie := utils.ParseCookie(cookies)
+	userCookie := utils.Cookie2Struct(cookies)
 
 	err = mergo.Merge(&cookie, userCookie)
 	if err != nil {
@@ -91,4 +91,37 @@ func LoginByPass(ctx context.Context, username string, password string) error {
 	}
 	// log.Printf("登录成功: %v\n", cookie)
 	return nil
+}
+
+func GetPanToken(ctx context.Context, username string) (string, error) {
+	cookie, err := GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return "", err
+	}
+
+	cookies := cookie.ToCookies()
+	resp, err := svc.Rty.R().
+		SetCookies(cookies).
+		Get(globals.GET_PANTOKEN_URL)
+
+	if err != nil {
+		log.Printf("获取网盘 Token 失败: %v\n", err)
+		return "", err
+	}
+
+	var result map[string]any
+	err = json.Unmarshal(resp.Body(), &result)
+	if err != nil {
+		log.Printf("解析网盘 Token 响应失败: %v\n", err)
+		return "", err
+	}
+
+	token, ok := result["_token"].(string)
+	if !ok {
+		log.Println("获取网盘 Token 失败")
+		return "", err
+	}
+
+	return token, nil
 }

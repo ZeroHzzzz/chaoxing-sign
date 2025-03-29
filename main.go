@@ -5,6 +5,7 @@ import (
 	"chaoxing/internal/pkg/resty"
 	"chaoxing/internal/services"
 	"context"
+	"fmt"
 )
 
 var ctx = context.Background()
@@ -15,8 +16,14 @@ func main() {
 
 	services.ServiceInit(rty, rdb)
 
-	// err := services.LoginByPass(ctx, "15918991630", "Zhz050108")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	err := services.LoginByPass(ctx, "15918991630", "Zhz050108")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	_, err = services.GetPanToken(ctx, "15918991630")
+
+	if err != nil {
+		fmt.Println(err)
+	}
 }

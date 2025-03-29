@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-func ParseCookie(cookies []*http.Cookie) models.UserCookieType {
+func Cookie2Struct(cookies []*http.Cookie) models.UserCookieType {
 	// Reflection
 	var cookie models.UserCookieType
 	val := reflect.ValueOf(&cookie).Elem()
