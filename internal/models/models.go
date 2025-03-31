@@ -5,18 +5,22 @@ import (
 )
 
 type UserCookieType struct {
-	Name  string `json:"name"`
-	UID   string `json:"UID"`
-	Fid   string `json:"fid"`
-	Pid   string `json:"pid"`
-	Refer string `json:"refer"`
-	Blank string `json:"_blank"`
-	T     bool   `json:"t"`
-	Vc3   string `json:"vc3"`
-	Uid   string `json:"_uid"`
-	D     string `json:"_d"`
-	Uf    string `json:"uf"`
-	Lv    string `json:"lv"`
+	// Name  string `json:"name"`
+	// Pid   string `json:"pid"`
+	// Refer string `json:"refer"`
+	// Blank string `json:"_blank"`
+	// T   bool   `json:"t"`
+
+	// basic cookie
+	UID string `json:"UID"`
+	Vc3 string `json:"vc3"`
+	Uid string `json:"_uid"`
+	D   string `json:"_d"`
+	Uf  string `json:"uf"`
+
+	// user params
+	Lv  string `json:"lv"`
+	Fid string `json:"fid"`
 }
 
 func (uc *UserCookieType) ToCookies() []*http.Cookie {

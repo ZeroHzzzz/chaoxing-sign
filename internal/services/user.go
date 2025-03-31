@@ -29,7 +29,7 @@ func GetCourses(ctx context.Context, username string) ([]models.CourseType, erro
 			"Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 			"Content-Type":    "application/x-www-form-urlencoded; charset=UTF-8",
 			"Cookie":          fmt.Sprintf("_uid=%s; _d=%s; vc3=%s", cookieData.Uid, cookieData.D, cookieData.Vc3),
-		}).
+		}). // 这里cookie格式特殊，因此使用了SetHeaders直接拼接
 		SetFormData(formData).
 		Post(globals.GET_COURSELIST_URL)
 

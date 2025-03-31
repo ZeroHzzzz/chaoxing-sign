@@ -64,16 +64,16 @@ func LoginByPass(ctx context.Context, username string, password string) (models.
 	}
 
 	cookie := models.UserCookieType{
-		Fid:   "-1",
-		Pid:   "-1",
-		Refer: "https://i.chaoxing.com",
-		Blank: "1",
-		T:     true,
-		Vc3:   "",
-		Uid:   "",
-		D:     "",
-		Uf:    "",
-		Lv:    "",
+		Fid: "-1",
+		// Pid:   "-1",
+		// Refer: "https://i.chaoxing.com",
+		// Blank: "1",
+		// T:     true,
+		Vc3: "",
+		Uid: "",
+		D:   "",
+		Uf:  "",
+		Lv:  "",
 	}
 
 	userCookie := utils.Cookie2Struct(cookies)
