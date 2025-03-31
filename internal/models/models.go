@@ -63,3 +63,8 @@ func (uc *UserCookieType) ToCookies() []*http.Cookie {
 	}
 	return cookies
 }
+
+type Course struct {
+	CourseId string `json:"courseId"`
+	ClassId  string `json:"classId"`
+}

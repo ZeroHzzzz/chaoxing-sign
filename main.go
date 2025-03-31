@@ -21,7 +21,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	_, err = services.GetPanToken(ctx, "15918991630")
+	_, err = services.GetCourses(ctx, "15918991630")
 
 	if err != nil {
 		fmt.Println(err)
