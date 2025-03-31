@@ -31,41 +31,12 @@ func (uc *UserCookieType) ToCookies() []*http.Cookie {
 		uidValue = uc.UID
 	}
 
-	if uc.Fid != "" {
-		cookies = append(cookies, &http.Cookie{
-			Name:  "fid",
-			Value: uc.Fid,
-		})
-	}
-
-	if uc.Uf != "" {
-		cookies = append(cookies, &http.Cookie{
-			Name:  "uf",
-			Value: uc.Uf,
-		})
-	}
-
-	if uc.D != "" {
-		cookies = append(cookies, &http.Cookie{
-			Name:  "_d",
-			Value: uc.D,
-		})
-	}
-
-	if uidValue != "" {
-		cookies = append(cookies, &http.Cookie{
-			Name:  "UID",
-			Value: uidValue,
-		})
-	}
-
-	// 检查并添加 vc3
-	if uc.Vc3 != "" {
-		cookies = append(cookies, &http.Cookie{
-			Name:  "vc3",
-			Value: uc.Vc3,
-		})
-	}
+	cookies = append(cookies, &http.Cookie{Name: "uf", Value: uc.Uf})
+	cookies = append(cookies, &http.Cookie{Name: "UID", Value: uidValue})
+	cookies = append(cookies, &http.Cookie{Name: "_uid", Value: uidValue})
+	cookies = append(cookies, &http.Cookie{Name: "_d", Value: uc.D})
+	cookies = append(cookies, &http.Cookie{Name: "fid", Value: uc.Fid})
+	cookies = append(cookies, &http.Cookie{Name: "vc3", Value: uc.Vc3})
 
 	return cookies
 }
