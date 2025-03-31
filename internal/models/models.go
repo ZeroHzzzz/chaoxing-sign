@@ -2,14 +2,11 @@ package models
 
 import (
 	"net/http"
-	"reflect"
-	"strconv"
-	"strings"
 )
 
 type UserCookieType struct {
 	Name  string `json:"name"`
-	UID   string `json:"uid"`
+	UID   string `json:"UID"`
 	Fid   string `json:"fid"`
 	Pid   string `json:"pid"`
 	Refer string `json:"refer"`
@@ -24,47 +21,62 @@ type UserCookieType struct {
 
 func (uc *UserCookieType) ToCookies() []*http.Cookie {
 	var cookies []*http.Cookie
-	val := reflect.ValueOf(uc).Elem()
-	typ := val.Type()
 
-	for i := range val.NumField() {
-		field := typ.Field(i)
-		value := val.Field(i)
+	uidValue := uc.Uid
+	if uidValue == "" {
+		uidValue = uc.UID
+	}
 
-		// 获取 json 标签作为 Cookie 名
-		tag := field.Tag.Get("json")
-		if tag == "" || tag == "-" {
-			continue
-		}
-		cookieName := strings.Split(tag, ",")[0] // 处理可能的多标签，如 `json:"name,omitempty"`
-
-		// 根据字段类型获取值（转为字符串）
-		var cookieValue string
-		switch value.Kind() {
-		case reflect.String:
-			cookieValue = value.String()
-		case reflect.Bool:
-			cookieValue = strconv.FormatBool(value.Bool())
-		default:
-			continue
-		}
-
-		if cookieValue == "" && value.Kind() != reflect.Bool {
-			continue
-		}
-
+	if uc.Fid != "" {
 		cookies = append(cookies, &http.Cookie{
-			Name:  cookieName,
-			Value: cookieValue,
-			// 可选：设置 Domain、Path 等（根据实际需求）
-			// Domain: "example.com",
-			// Path:   "/",
+			Name:  "fid",
+			Value: uc.Fid,
 		})
 	}
+
+	if uc.Uf != "" {
+		cookies = append(cookies, &http.Cookie{
+			Name:  "uf",
+			Value: uc.Uf,
+		})
+	}
+
+	if uc.D != "" {
+		cookies = append(cookies, &http.Cookie{
+			Name:  "_d",
+			Value: uc.D,
+		})
+	}
+
+	if uidValue != "" {
+		cookies = append(cookies, &http.Cookie{
+			Name:  "UID",
+			Value: uidValue,
+		})
+	}
+
+	// 检查并添加 vc3
+	if uc.Vc3 != "" {
+		cookies = append(cookies, &http.Cookie{
+			Name:  "vc3",
+			Value: uc.Vc3,
+		})
+	}
+
 	return cookies
 }
 
-type Course struct {
-	CourseId string `json:"courseId"`
-	ClassId  string `json:"classId"`
+type CourseType struct {
+	CourseID string `json:"courseId"`
+	ClassID  string `json:"classId"`
+}
+
+type ActivityType struct {
+	ActivityID string `json:"activityId"`
+	Name       string `json:"name"`
+	CourseID   string `json:"courseId"`
+	ClassID    string `json:"classId"`
+	OtherID    int    `json:"otherId"`
+	IfPhoto    int    `json:"ifPhoto"`
+	ChatID     string `json:"chatId"`
 }

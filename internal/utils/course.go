@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-func ParseCourse(data string) []models.Course {
-	var courses []models.Course
+func ParseCourse(data string) []models.CourseType {
+	var courses []models.CourseType
 	i := 0 // 全局索引
 
 	for {
@@ -33,9 +33,9 @@ func ParseCourse(data string) []models.Course {
 		classIdEnd += classIdStart
 		classId := data[classIdStart:classIdEnd]
 
-		courses = append(courses, models.Course{
-			CourseId: courseId,
-			ClassId:  classId,
+		courses = append(courses, models.CourseType{
+			CourseID: courseId,
+			ClassID:  classId,
 		})
 
 		i = classIdEnd + 1

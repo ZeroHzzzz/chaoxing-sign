@@ -16,14 +16,17 @@ func main() {
 
 	services.ServiceInit(rty, rdb)
 
-	err := services.LoginByPass(ctx, "15918991630", "Zhz050108")
+	_, err := services.LoginByPass(ctx, "19033952880", "Zhz050108")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	_, err = services.GetCourses(ctx, "15918991630")
+	courses, err := services.GetCourses(ctx, "19033952880")
 
 	if err != nil {
 		fmt.Println(err)
 	}
+
+	fmt.Println(courses[0])
+	services.GetActivity(ctx, courses[0], "19033952880")
 }

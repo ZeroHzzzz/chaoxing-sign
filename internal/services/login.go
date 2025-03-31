@@ -11,15 +11,15 @@ import (
 	"dario.cat/mergo"
 )
 
-func LoginByPass(ctx context.Context, username string, password string) error {
+func LoginByPass(ctx context.Context, username string, password string) (models.UserCookieType, error) {
 	encryptedPassword, err := utils.EncryptByAES(password, globals.Secret)
 	if err != nil {
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	encryptedUsername, err := utils.EncryptByAES(username, globals.Secret)
 	if err != nil {
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	formData := map[string]string{
@@ -39,28 +39,28 @@ func LoginByPass(ctx context.Context, username string, password string) error {
 		Post(globals.LOGIN_URL)
 
 	if err != nil {
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	// 解析 JSON 响应
 	var result map[string]any
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	// 检查登录状态
 	status, ok := result["status"].(bool)
 	if !ok || !status {
 		log.Println("登陆失败")
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	// 获取 Set-Cookie
 	cookies := resp.Cookies()
 	if len(cookies) == 0 {
 		log.Println("网络异常，未获取到 Cookie")
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	cookie := models.UserCookieType{
@@ -81,16 +81,16 @@ func LoginByPass(ctx context.Context, username string, password string) error {
 	err = mergo.Merge(&cookie, userCookie)
 	if err != nil {
 		log.Printf("合并失败: %v\n", err)
-		return err
+		return models.UserCookieType{}, err
 	}
 
 	err = StoreCookies(ctx, username, cookie)
 	if err != nil {
 		log.Printf("存储 Cookie 失败: %v\n", err)
-		return err
+		return models.UserCookieType{}, err
 	}
 	// log.Printf("登录成功: %v\n", cookie)
-	return nil
+	return cookie, nil
 }
 
 func GetPanToken(ctx context.Context, username string) (string, error) {

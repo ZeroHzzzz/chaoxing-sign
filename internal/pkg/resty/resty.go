@@ -13,7 +13,7 @@ var (
 
 func initRty() {
 	client = resty.New().
-		SetRedirectPolicy(resty.NoRedirectPolicy()).
+		// SetRedirectPolicy(resty.NoRedirectPolicy()).
 		SetCookieJar(nil)
 }
 
