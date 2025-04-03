@@ -56,3 +56,10 @@ type ActivityType struct {
 	OpenPreventCheatFlag int    `json:"openPreventCheatFlag"` // 验证码
 	ChatID               string `json:"chatId"`
 }
+
+type IMParamsType struct {
+	MyName  string `json:"myName"`
+	MyToken string `json:"myToken"`
+	MyTuid  string `json:"myTuid"`
+	MyPuid  string `json:"myPuid"`
+}

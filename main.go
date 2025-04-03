@@ -21,24 +21,30 @@ func main() {
 		fmt.Println(err)
 	}
 
-	courses, err := services.GetCourses(ctx, "19033952880")
+	// courses, err := services.GetCourses(ctx, "19033952880")
 
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// fmt.Println(courses[0])
+	// act, err := services.GetActivity(ctx, courses[0], "19033952880")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(act)
+
+	// err = services.GetPPTActivityInfo(ctx, "19033952880", act)
+
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// fmt.Println(act)
+
+	imparam, err := services.GetIMParams(ctx, "19033952880")
 	if err != nil {
 		fmt.Println(err)
 	}
-
-	fmt.Println(courses[0])
-	act, err := services.GetActivity(ctx, courses[0], "19033952880")
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(act)
-
-	err = services.GetPPTActivityInfo(ctx, "19033952880", act)
-
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(act)
+	fmt.Println(imparam)
 }

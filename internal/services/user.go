@@ -53,4 +53,29 @@ func GetCourses(ctx context.Context, username string) ([]models.CourseType, erro
 }
 
 // 获取IM参数（登录用）
-// func GetIMParams()
+func GetIMParams(ctx context.Context, username string) (*models.IMParamsType, error) {
+	cookieData, err := GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return nil, err
+	}
+
+	cookies := cookieData.ToCookies()
+	resp, err := svc.Rty.R().
+		SetCookies(cookies).
+		Get(globals.GET_WEBIM_URL)
+
+	if resp.StatusCode() == 302 {
+		log.Println("获取IM参数失败，可能是 Cookie 过期")
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	data := resp.String()
+
+	imParams := utils.ParseIMParams(data)
+	// Puid为uid
+	imParams.MyPuid = cookieData.Uid
+	return &imParams, nil
+}

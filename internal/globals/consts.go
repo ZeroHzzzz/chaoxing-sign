@@ -10,4 +10,6 @@ const (
 	GET_COURSELIST_URL    = "https://mooc1-1.chaoxing.com/visit/courselistdata"
 	GET_ACTIVITY_URL      = "https://mobilelearn.chaoxing.com/v2/apis/active/student/activelist"
 	GET_ACTIVITY_INFO_URL = "https://mobilelearn.chaoxing.com/v2/apis/active/getPPTActiveInfo"
+
+	GET_WEBIM_URL = "https://im.chaoxing.com/webim/me"
 )
