@@ -28,5 +28,17 @@ func main() {
 	}
 
 	fmt.Println(courses[0])
-	services.GetActivity(ctx, courses[0], "19033952880")
+	act, err := services.GetActivity(ctx, courses[0], "19033952880")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(act)
+
+	err = services.GetPPTActivityInfo(ctx, "19033952880", act)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(act)
 }

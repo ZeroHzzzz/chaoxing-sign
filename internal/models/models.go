@@ -47,11 +47,12 @@ type CourseType struct {
 }
 
 type ActivityType struct {
-	ActivityID string `json:"activityId"`
-	Name       string `json:"name"`
-	CourseID   string `json:"courseId"`
-	ClassID    string `json:"classId"`
-	OtherID    int    `json:"otherId"`
-	IfPhoto    int    `json:"ifPhoto"`
-	ChatID     string `json:"chatId"`
+	ActivityID           string `json:"activityId"`
+	Name                 string `json:"name"`
+	CourseID             string `json:"courseId"`
+	ClassID              string `json:"classId"`
+	OtherID              int    `json:"otherId"`
+	IfPhoto              int    `json:"ifPhoto"`
+	OpenPreventCheatFlag int    `json:"openPreventCheatFlag"` // 验证码
+	ChatID               string `json:"chatId"`
 }

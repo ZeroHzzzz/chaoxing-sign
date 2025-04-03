@@ -4,8 +4,8 @@ import (
 	"chaoxing/internal/globals"
 	"chaoxing/internal/models"
 	"context"
-	"fmt"
 	"log"
+	"strconv"
 )
 
 type GetActivityChaoxingResp struct {
@@ -23,7 +23,8 @@ type GetActivityChaoxingResp struct {
 	ErrorMsg string `json:"errorMsg"`
 }
 
-func GetActivity(ctx context.Context, course models.CourseType, username string) ([]models.ActivityType, error) {
+// 获取课程活动
+func GetActivity(ctx context.Context, course models.CourseType, username string) (*models.ActivityType, error) {
 	var resp GetActivityChaoxingResp
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
@@ -49,7 +50,70 @@ func GetActivity(ctx context.Context, course models.CourseType, username string)
 		return nil, err
 	}
 
-	fmt.Println(r.String())
-	fmt.Println(resp)
-	return nil, nil
+	if r.StatusCode() == 302 {
+		log.Println("获取活动列表失败，可能是 Cookie 过期")
+		return nil, nil
+	}
+	// fmt.Println(r.String())
+	// fmt.Println(resp)
+
+	var activity models.ActivityType
+	if len(resp.Data.ActiveList) != 0 {
+		data := resp.Data.ActiveList[0]
+		otherID, _ := strconv.Atoi(data.OtherID)
+		if data.Status == 1 && otherID >= 0 && otherID <= 5 {
+			activity = models.ActivityType{
+				ActivityID: strconv.Itoa(data.ID),
+				OtherID:    otherID,
+				Name:       data.NameOne,
+				CourseID:   course.CourseID,
+				ClassID:    course.ClassID,
+			}
+		} else {
+			log.Println("活动已结束或不支持")
+			return nil, nil
+		}
+	} else {
+		log.Println("无活动可查")
+		return nil, nil
+	}
+
+	return &activity, nil
+}
+
+type GetPPTActivityInfoResp struct {
+	ErrorMsg string `json:"errorMsg"`
+	Data     struct {
+		Ifphoto int `json:"ifphoto"`
+		// 这三个参数启用验证码的时候全都是1，可以考虑只保留一个
+		OpenPreventCheatFlag int `json:"openPreventCheatFlag"`
+		ShowVCode            int `json:"showVCode"`
+		IfNeedVCode          int `json:"ifNeedVCode"`
+	} `json:"data"`
+}
+
+// 获取活动信息（验证码、图片）
+func GetPPTActivityInfo(ctx context.Context, username string, activity *models.ActivityType) error {
+	var resp GetPPTActivityInfoResp
+	cookieData, err := GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return err
+	}
+	cookies := cookieData.ToCookies()
+
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		SetQueryParam("activeId", activity.ActivityID).
+		SetResult(&resp).
+		Get(globals.GET_ACTIVITY_INFO_URL)
+
+	if err != nil && r.StatusCode() == 302 {
+		log.Println("获取活动信息失败，可能是 Cookie 过期")
+		return nil
+	}
+
+	activity.OpenPreventCheatFlag = resp.Data.OpenPreventCheatFlag
+	activity.IfPhoto = resp.Data.Ifphoto
+	return nil
 }

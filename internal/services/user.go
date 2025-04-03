@@ -51,3 +51,6 @@ func GetCourses(ctx context.Context, username string) ([]models.CourseType, erro
 
 	return courses, nil
 }
+
+// 获取IM参数（登录用）
+// func GetIMParams()
