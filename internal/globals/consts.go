@@ -12,4 +12,7 @@ const (
 	GET_ACTIVITY_INFO_URL = "https://mobilelearn.chaoxing.com/v2/apis/active/getPPTActiveInfo"
 
 	GET_WEBIM_URL = "https://im.chaoxing.com/webim/me"
+	PRESIGN_URL   = "https://mobilelearn.chaoxing.com/newsign/preSign"
+	ANALYSIS_URL  = "https://mobilelearn.chaoxing.com/pptSign/analysis"
+	ANALYSIS2_URL = "https://mobilelearn.chaoxing.com/pptSign/analysis2"
 )
