@@ -76,7 +76,7 @@ func LoginByPass(ctx context.Context, username string, password string) (models.
 		Lv:  "",
 	}
 
-	userCookie := utils.Cookie2Struct(cookies)
+	userCookie := utils.ParseCookies(cookies)
 
 	err = mergo.Merge(&cookie, userCookie)
 	if err != nil {
