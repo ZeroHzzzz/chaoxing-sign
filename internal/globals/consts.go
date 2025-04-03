@@ -15,4 +15,6 @@ const (
 	PRESIGN_URL   = "https://mobilelearn.chaoxing.com/newsign/preSign"
 	ANALYSIS_URL  = "https://mobilelearn.chaoxing.com/pptSign/analysis"
 	ANALYSIS2_URL = "https://mobilelearn.chaoxing.com/pptSign/analysis2"
+
+	PPT_SIGN_URL = "https://mobilelearn.chaoxing.com/pptSign/stuSignajax"
 )

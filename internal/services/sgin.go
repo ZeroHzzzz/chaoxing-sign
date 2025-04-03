@@ -75,3 +75,48 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 	log.Println("请求结果: " + r.String())
 	return "", nil
 }
+
+type GeneralSignResp struct {
+	Data string `json:"data"`
+}
+
+func GeneralSign(ctx context.Context, activityID, courseID, classID, username string) (string, error) {
+	var resp GeneralSignResp
+	cookieData, err := GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return "", err
+	}
+
+	cookies := cookieData.ToCookies()
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		SetQueryParams(map[string]string{
+			"activeId":  activityID,
+			"uid":       cookieData.Uid,
+			"latitude":  "-1",
+			"longitude": "-1",
+			"appType":   "15",
+			"fid":       cookieData.Fid,
+			"name":      username,
+		}).
+		SetResult(&resp).
+		Get(globals.PPT_SIGN_URL)
+
+	if r.StatusCode() == 302 {
+		log.Println("签到失败，可能是 Cookie 过期")
+		return "", nil
+	} else if err != nil {
+		log.Printf("签到失败: %v\n", err)
+		return "", err
+	}
+
+	if resp.Data == "success" {
+		log.Println("[通用]签到成功")
+	} else {
+		log.Printf("[通用]签到失败: %s\n", resp.Data)
+		return "", nil
+	}
+
+	return "", nil
+}
