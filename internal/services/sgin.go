@@ -2,12 +2,87 @@ package services
 
 import (
 	"chaoxing/internal/globals"
+	"chaoxing/internal/models"
 	"chaoxing/internal/utils"
 	"context"
 	"fmt"
 	"log"
 )
 
+func SignLogic(ctx context.Context, act models.ActivityType, lat, lon, address, enc, username string) error {
+	err := PreSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	switch act.OtherID {
+	case 0:
+		{
+			if act.IfPhoto == 1 {
+				// todo: 补充拍照签到逻辑
+			} else {
+				// 普通签到
+				err = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+			}
+			break
+		}
+	case 2:
+		{
+			// 二维码
+			// 先获取用户名
+			name, err := GetUserName(ctx, username)
+			if err != nil {
+				fmt.Println(err)
+			}
+
+			err = QrcodeSign(ctx, enc, name, act.ActivityID, address, lat, lon, "0", username)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+			break
+		}
+	case 3:
+		{
+			// 手势签到
+			err = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+		}
+	case 4:
+		{
+			// 定位签到
+			name, err := GetUserName(ctx, username)
+			if err != nil {
+				fmt.Println(err)
+			}
+			err = LocationSign(ctx, name, act.ActivityID, address, lat, lon, username)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+			break
+		}
+	case 5:
+		{
+			// 签到码签到
+			err = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+			if err != nil {
+				log.Println(err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 func PreSign(ctx context.Context, activityID, courseID, classID, username string) error {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {

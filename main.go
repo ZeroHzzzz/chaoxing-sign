@@ -6,6 +6,7 @@ import (
 	"chaoxing/internal/services"
 	"context"
 	"fmt"
+	"log"
 )
 
 var ctx = context.Background()
@@ -27,20 +28,20 @@ func main() {
 		fmt.Println(err)
 	}
 
-	fmt.Println(courses[0])
+	log.Println(courses[0])
 	act, err := services.GetActivity(ctx, courses[0], "19033952880")
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(act)
+	log.Println(act)
 
 	err = services.GetPPTActivityInfo(ctx, "19033952880", act)
 
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(act)
-
+	log.Println(act)
+	log.Println("otherID: ", act.OtherID)
 	// imparam, err := services.GetIMParams(ctx, "19033952880")
 	// if err != nil {
 	// 	fmt.Println(err)
@@ -56,7 +57,7 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(name)
+	log.Println(name)
 
 	// err = services.LocationSign(ctx, name, act.ActivityID, "", "120.043053", "30.230763", "19033952880")
 	// if err != nil {

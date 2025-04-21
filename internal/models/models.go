@@ -51,7 +51,7 @@ type ActivityType struct {
 	Name                 string `json:"name"`
 	CourseID             string `json:"courseId"`
 	ClassID              string `json:"classId"`
-	OtherID              int    `json:"otherId"`
+	OtherID              int    `json:"otherId"` // 这个是用来区分签到类型的
 	IfPhoto              int    `json:"ifPhoto"`
 	OpenPreventCheatFlag int    `json:"openPreventCheatFlag"` // 验证码
 	ChatID               string `json:"chatId"`
