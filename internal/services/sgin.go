@@ -4,6 +4,7 @@ import (
 	"chaoxing/internal/globals"
 	"chaoxing/internal/utils"
 	"context"
+	"fmt"
 	"log"
 )
 
@@ -118,5 +119,77 @@ func GeneralSign(ctx context.Context, activityID, courseID, classID, username st
 		return "", nil
 	}
 
+	return "", nil
+}
+
+func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, altitude string) (string, error) {
+	cookieData, err := GetCookies(ctx, name)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return "", err
+	}
+
+	location := fmt.Sprintf("{\"result\":\"1\",\"address\":\"%s\",\"latitude\":%s,\"longitude\":%s,\"altitude\":%s}", address, lat, lon, altitude)
+	cookies := cookieData.ToCookies()
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		SetQueryParams(map[string]string{
+			"enc":       enc,
+			"activeId":  activeId,
+			"uid":       cookieData.Uid,
+			"location":  location,
+			"appType":   "15",
+			"fid":       cookieData.Fid,
+			"name":      name,
+			"clientip":  "",
+			"latitude":  "-1",
+			"longitude": "-1",
+		}).
+		Get(globals.PPT_SIGN_URL)
+
+	if r.StatusCode() == 302 {
+		log.Println("签到失败，可能是 Cookie 过期")
+		return "", nil
+	} else if err != nil {
+		log.Printf("签到失败: %v\n", err)
+		return "", err
+	}
+
+	log.Println("[二维码]签到成功")
+	return "", nil
+}
+
+func LocationSign(ctx context.Context, name, activeId, address, lat, lon string) (string, error) {
+	cookieData, err := GetCookies(ctx, name)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return "", err
+	}
+
+	cookies := cookieData.ToCookies()
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		SetQueryParams(map[string]string{
+			"activeId":  activeId,
+			"address":   address,
+			"uid":       cookieData.Uid,
+			"appType":   "15",
+			"fid":       cookieData.Fid,
+			"name":      name,
+			"clientip":  "",
+			"latitude":  lat,
+			"longitude": lon,
+			"ifTiJiao":  "1",
+		}).
+		Get(globals.PPT_SIGN_URL)
+	if r.StatusCode() == 302 {
+		log.Println("签到失败，可能是 Cookie 过期")
+		return "", nil
+	} else if err != nil {
+		log.Printf("签到失败: %v\n", err)
+		return "", err
+	}
+
+	log.Println("[位置]签到成功")
 	return "", nil
 }
