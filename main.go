@@ -42,9 +42,25 @@ func main() {
 
 	// fmt.Println(act)
 
-	imparam, err := services.GetIMParams(ctx, "19033952880")
+	// imparam, err := services.GetIMParams(ctx, "19033952880")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(imparam)
+
+	// err = services.PreSign(ctx, act.ActivityID, courses[0].CourseID, courses[0].ClassID, "19033952880")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// err = services.LocationSign(ctx, act.ActivityID, courses[0].CourseID, courses[0].ClassID, "19033952880")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	data, err := services.GetUserName(ctx, "19033952880")
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println(imparam)
+	fmt.Println(data)
 }

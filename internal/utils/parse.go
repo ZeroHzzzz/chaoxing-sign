@@ -136,3 +136,9 @@ func ParseCourse(data string) []models.CourseType {
 
 	return courses
 }
+
+func ParseUserName(data string) string {
+	endOfMessageName := strings.Index(data, "messageName") + 20
+	endOfName := strings.Index(data[endOfMessageName:], `"`) + endOfMessageName
+	return data[endOfMessageName:endOfName]
+}

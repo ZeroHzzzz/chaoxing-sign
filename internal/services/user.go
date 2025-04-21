@@ -113,3 +113,26 @@ func GetIMParams(ctx context.Context, username string) (*models.IMParamsType, er
 	imParams.MyPuid = cookieData.Uid
 	return &imParams, nil
 }
+
+func GetUserName(ctx context.Context, username string) (string, error) {
+	cookieData, err := GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return "", err
+	}
+
+	cookies := cookieData.ToCookies()
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		Get(globals.GET_USER_INFO_URL)
+	if r.StatusCode() == 302 {
+		log.Println("获取用户信息失败，可能是 Cookie 过期")
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+
+	data := r.String()
+	name := utils.ParseUserName(data)
+	return name, nil
+}
