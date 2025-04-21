@@ -81,12 +81,12 @@ type GeneralSignResp struct {
 	Data string `json:"data"`
 }
 
-func GeneralSign(ctx context.Context, activityID, courseID, classID, username string) (string, error) {
+func GeneralSign(ctx context.Context, activityID, courseID, classID, username string) error {
 	var resp GeneralSignResp
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("获取 Cookie 失败: %v\n", err)
-		return "", err
+		return err
 	}
 
 	cookies := cookieData.ToCookies()
@@ -106,24 +106,25 @@ func GeneralSign(ctx context.Context, activityID, courseID, classID, username st
 
 	if r.StatusCode() == 302 {
 		log.Println("签到失败，可能是 Cookie 过期")
-		return "", nil
+		return nil
 	} else if err != nil {
 		log.Printf("签到失败: %v\n", err)
-		return "", err
+		return err
 	}
 
 	if resp.Data == "success" {
 		log.Println("[通用]签到成功")
 	} else {
 		log.Printf("[通用]签到失败: %s\n", resp.Data)
-		return "", nil
+		return nil
 	}
 
-	return "", nil
+	log.Println("[PreSign]: " + r.String())
+	return nil
 }
 
-func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, altitude string) error {
-	cookieData, err := GetCookies(ctx, name)
+func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, altitude, username string) error {
+	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("获取 Cookie 失败: %v\n", err)
 		return err
@@ -155,12 +156,12 @@ func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, alt
 		return err
 	}
 
-	log.Println("[二维码]签到成功")
+	log.Println("[Qrcode]: " + r.String())
 	return nil
 }
 
-func LocationSign(ctx context.Context, name, activeId, address, lat, lon string) error {
-	cookieData, err := GetCookies(ctx, name)
+func LocationSign(ctx context.Context, name, activeId, address, lat, lon, username string) error {
+	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("获取 Cookie 失败: %v\n", err)
 		return err
@@ -190,7 +191,6 @@ func LocationSign(ctx context.Context, name, activeId, address, lat, lon string)
 		return err
 	}
 
-	fmt.Println(r.String())
-	log.Println("[位置]签到成功")
+	log.Println("[Location]: " + r.String())
 	return nil
 }
