@@ -3,6 +3,7 @@ package services
 import (
 	"chaoxing/internal/globals"
 	"chaoxing/internal/models"
+	"chaoxing/internal/pkg/xerr"
 	"chaoxing/internal/utils"
 	"context"
 	"fmt"
@@ -10,10 +11,9 @@ import (
 )
 
 func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, username string) error {
-	err := PreSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
-	if err != nil {
-		log.Println(err)
-		return err
+	status := PreSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+	if !status {
+		return xerr.PreSignErr
 	}
 
 	switch act.OtherID {
@@ -23,10 +23,9 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 				// todo: 补充拍照签到逻辑
 			} else {
 				// 普通签到
-				err = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
-				if err != nil {
-					log.Println(err)
-					return err
+				status = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+				if !status {
+					return xerr.SignErr
 				}
 			}
 			break
@@ -41,21 +40,21 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 			}
 
 			// 暂时先传空值
-			err = QrcodeSign(ctx, enc, name, act.ActivityID, "", "lat", "lon", "0", username)
-			if err != nil {
-				log.Println(err)
-				return err
+			status = QrcodeSign(ctx, models.LocationType{}, enc, name, act.ActivityID, username)
+			if !status {
+				return xerr.SignErr
 			}
 			break
 		}
 	case 3:
 		{
 			// 手势签到
-			err = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
-			if err != nil {
-				log.Println(err)
-				return err
+			// Todo：这里有些问题，需要后续修改
+			status = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+			if !status {
+				return xerr.SignErr
 			}
+			break
 		}
 	case 4:
 		{
@@ -63,32 +62,42 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 			name, err := GetUserName(ctx, username)
 			if err != nil {
 				fmt.Println(err)
-			}
-			err = LocationSign(ctx, signCfg, name, act.ActivityID, username)
-			if err != nil {
-				log.Println(err)
 				return err
+			}
+
+			var signFlag = false
+			for _, location := range signCfg.Locations {
+				status = LocationSign(ctx, location, name, act.ActivityID, username)
+				if status {
+					signFlag = true
+					break
+				}
+			}
+
+			if !signFlag {
+				return xerr.SignErr
 			}
 			break
 		}
 	case 5:
 		{
 			// 签到码签到
-			err = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
-			if err != nil {
-				log.Println(err)
-				return err
+			// Todo：这里有些问题，需要后续修改
+			status = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+			if !status {
+				return xerr.SignErr
 			}
+			break
 		}
 	}
 
 	return nil
 }
-func PreSign(ctx context.Context, activityID, courseID, classID, username string) error {
+func PreSign(ctx context.Context, activityID, courseID, classID, username string) bool {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return err
+		log.Printf("[PreSign] 获取 Cookie 失败: %v\n", err)
+		return false
 	}
 
 	cookies := cookieData.ToCookies()
@@ -107,11 +116,11 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 		}).
 		Get(globals.PRESIGN_URL)
 	if r.StatusCode() == 302 {
-		log.Println("获取预签到失败，可能是 Cookie 过期")
-		return nil
+		log.Println("[PreSign] 获取预签到失败，可能是 Cookie 过期")
+		return false
 	} else if err != nil {
-		log.Printf("获取预签到失败: %v\n", err)
-		return err
+		log.Printf("[PreSign] error: %v\n", err)
+		return false
 	}
 
 	// ANALYSIS
@@ -124,11 +133,11 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 		}).
 		Get(globals.ANALYSIS_URL)
 	if r.StatusCode() == 302 {
-		log.Println("获取analysis失败，可能是 Cookie 过期")
-		return nil
+		log.Println("[PreSign] 获取analysis失败，可能是 Cookie 过期")
+		return false
 	} else if err != nil {
-		log.Printf("获取analysis失败: %v\n", err)
-		return err
+		log.Printf("[PreSign] 获取analysis失败: %v\n", err)
+		return false
 	}
 
 	code := utils.ParseAnalysis(r.String())
@@ -142,27 +151,22 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 		}).
 		Get(globals.ANALYSIS2_URL)
 	if r.StatusCode() == 302 {
-		log.Println("获取analysis2失败，可能是 Cookie 过期")
-		return nil
+		log.Println("[PreSign] 获取analysis2失败，可能是 Cookie 过期")
+		return false
 	} else if err != nil {
-		log.Printf("获取analysis2失败: %v\n", err)
-		return err
+		log.Printf("[PreSign] 获取analysis2失败: %v\n", err)
+		return false
 	}
 
-	log.Println("请求结果: " + r.String())
-	return nil
+	log.Println("[PreSign] " + r.String())
+	return true
 }
 
-type GeneralSignResp struct {
-	Data string `json:"data"`
-}
-
-func GeneralSign(ctx context.Context, activityID, courseID, classID, username string) error {
-	var resp GeneralSignResp
+func GeneralSign(ctx context.Context, activityID, courseID, classID, username string) bool {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return err
+		log.Printf("[通用] 获取 Cookie 失败: %v\n", err)
+		return false
 	}
 
 	cookies := cookieData.ToCookies()
@@ -177,36 +181,34 @@ func GeneralSign(ctx context.Context, activityID, courseID, classID, username st
 			"fid":       cookieData.Fid,
 			"name":      username,
 		}).
-		SetResult(&resp).
 		Get(globals.PPT_SIGN_URL)
 
 	if r.StatusCode() == 302 {
-		log.Println("签到失败，可能是 Cookie 过期")
-		return nil
+		log.Println("[通用] 签到失败，可能是 Cookie 过期")
+		return false
 	} else if err != nil {
-		log.Printf("签到失败: %v\n", err)
-		return err
+		log.Printf("[通用] 签到失败: %v\n", err)
+		return false
 	}
 
-	if resp.Data == "success" {
-		log.Println("[通用]签到成功")
+	if r.String() == "success" {
+		log.Println("[通用] 签到成功")
 	} else {
-		log.Printf("[通用]签到失败: %s\n", resp.Data)
-		return nil
+		log.Printf("[通用] 签到失败: %s\n", r.String())
+		return false
 	}
 
-	log.Println("[PreSign]: " + r.String())
-	return nil
+	return true
 }
 
-func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, altitude, username string) error {
+func QrcodeSign(ctx context.Context, location models.LocationType, enc, name, activeId, username string) bool {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return err
+		log.Printf("[Qrcode] 获取 Cookie 失败: %v\n", err)
+		return false
 	}
 
-	location := fmt.Sprintf("{\"result\":\"1\",\"address\":\"%s\",\"latitude\":%s,\"longitude\":%s,\"altitude\":%s}", address, lat, lon, altitude)
+	formated_location := fmt.Sprintf("{\"result\":\"1\",\"address\":\"%s\",\"latitude\":%s,\"longitude\":%s,\"altitude\":%s}", location.Address, location.Latitude, location.Longitude, location.Altitude)
 	cookies := cookieData.ToCookies()
 	r, err := svc.Rty.R().
 		SetCookies(cookies).
@@ -214,7 +216,7 @@ func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, alt
 			"enc":       enc,
 			"activeId":  activeId,
 			"uid":       cookieData.Uid,
-			"location":  location,
+			"location":  formated_location,
 			"appType":   "15",
 			"fid":       cookieData.Fid,
 			"name":      name,
@@ -225,56 +227,61 @@ func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, alt
 		Get(globals.PPT_SIGN_URL)
 
 	if r.StatusCode() == 302 {
-		log.Println("签到失败，可能是 Cookie 过期")
-		return nil
+		log.Println("[Qrcode] 签到失败，可能是 Cookie 过期")
+		return false
 	} else if err != nil {
-		log.Printf("签到失败: %v\n", err)
-		return err
+		log.Printf("[Qrcode] 签到失败: %v\n", err)
+		return false
 	}
 
-	log.Println("[Qrcode]: " + r.String())
-	return nil
+	if r.String() == "success" {
+		log.Println("[Qrcode] 签到成功")
+	} else {
+		log.Printf("[Qrcode] 签到失败: %s\n", r.String())
+		return false
+	}
+
+	log.Println("[Qrcode] " + r.String())
+	return true
 }
 
-func LocationSign(ctx context.Context, signCfg models.SignConfigType, name, activeId, username string) error {
+func LocationSign(ctx context.Context, location models.LocationType, name, activeId, username string) bool {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return err
+		log.Printf("[Location] 获取 Cookie 失败: %v\n", err)
+		return false
 	}
 
 	cookies := cookieData.ToCookies()
-	for _, location := range signCfg.Locations {
-		r, err := svc.Rty.R().
-			SetCookies(cookies).
-			SetQueryParams(map[string]string{
-				"activeId":  activeId,
-				"address":   location.Address,
-				"uid":       cookieData.Uid,
-				"appType":   "15",
-				"fid":       cookieData.Fid,
-				"name":      name,
-				"clientip":  "",
-				"latitude":  location.Latitude,
-				"longitude": location.Longitude,
-				"ifTiJiao":  "1",
-			}).
-			Get(globals.PPT_SIGN_URL)
-		if r.StatusCode() == 302 {
-			log.Println("签到失败，可能是 Cookie 过期")
-			return nil
-		} else if err != nil {
-			log.Printf("签到失败: %v\n", err)
-			return err
-		}
-
-		if r.String() != "success" {
-			log.Printf("[Location]: 签到失败， %s\n", r.String())
-			continue
-		}
-		log.Println("[Location]: " + r.String())
-		break
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		SetQueryParams(map[string]string{
+			"activeId":  activeId,
+			"address":   location.Address,
+			"uid":       cookieData.Uid,
+			"appType":   "15",
+			"fid":       cookieData.Fid,
+			"name":      name,
+			"clientip":  "",
+			"latitude":  location.Latitude,
+			"longitude": location.Longitude,
+			"ifTiJiao":  "1",
+		}).
+		Get(globals.PPT_SIGN_URL)
+	if r.StatusCode() == 302 {
+		log.Println("[Location] 签到失败，可能是 Cookie 过期")
+		return false
+	} else if err != nil {
+		log.Printf("[Location] 签到失败: %v\n", err)
+		return false
 	}
 
-	return nil
+	if r.String() == "success" {
+		log.Println("[Location] 签到成功")
+	} else {
+		log.Printf("[Location] 签到失败: %s\n", r.String())
+		return false
+	}
+
+	return true
 }

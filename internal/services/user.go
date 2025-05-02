@@ -3,6 +3,7 @@ package services
 import (
 	"chaoxing/internal/globals"
 	"chaoxing/internal/models"
+	"chaoxing/internal/pkg/xerr"
 	"chaoxing/internal/utils"
 	"context"
 	"encoding/json"
@@ -91,8 +92,8 @@ func GetCourses(ctx context.Context, username string) ([]models.CourseType, erro
 func GetUserName(ctx context.Context, username string) (string, error) {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return "", err
+		log.Println("获取 Cookie 失败: ", err)
+		return "", xerr.NotLoginErr
 	}
 
 	cookies := cookieData.ToCookies()
@@ -101,8 +102,9 @@ func GetUserName(ctx context.Context, username string) (string, error) {
 		Get(globals.GET_USER_INFO_URL)
 	if r.StatusCode() == 302 {
 		log.Println("获取用户信息失败，可能是 Cookie 过期")
-		return "", nil
+		return "", xerr.NotLoginErr
 	} else if err != nil {
+		log.Println("获取用户信息失败: ", err)
 		return "", err
 	}
 
@@ -126,8 +128,9 @@ func GetIMParams(ctx context.Context, username string) (*models.IMParamsType, er
 
 	if r.StatusCode() == 302 {
 		log.Println("获取IM参数失败，可能是 Cookie 过期")
-		return nil, nil
+		return nil, xerr.NotLoginErr
 	} else if err != nil {
+		log.Printf("获取IM参数失败: %v\n", err)
 		return nil, err
 	}
 
