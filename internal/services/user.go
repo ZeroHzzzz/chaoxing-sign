@@ -8,6 +8,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	"github.com/redis/go-redis/v9"
 )
 
 func GetPanToken(ctx context.Context, username string) (string, error) {
@@ -86,6 +88,29 @@ func GetCourses(ctx context.Context, username string) ([]models.CourseType, erro
 	return courses, nil
 }
 
+func GetUserName(ctx context.Context, username string) (string, error) {
+	cookieData, err := GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return "", err
+	}
+
+	cookies := cookieData.ToCookies()
+	r, err := svc.Rty.R().
+		SetCookies(cookies).
+		Get(globals.GET_USER_INFO_URL)
+	if r.StatusCode() == 302 {
+		log.Println("获取用户信息失败，可能是 Cookie 过期")
+		return "", nil
+	} else if err != nil {
+		return "", err
+	}
+
+	data := r.String()
+	name := utils.ParseUserName(data)
+	return name, nil
+}
+
 // 获取IM参数（登录用）
 func GetIMParams(ctx context.Context, username string) (*models.IMParamsType, error) {
 	cookieData, err := GetCookies(ctx, username)
@@ -114,25 +139,39 @@ func GetIMParams(ctx context.Context, username string) (*models.IMParamsType, er
 	return &imParams, nil
 }
 
-func GetUserName(ctx context.Context, username string) (string, error) {
-	cookieData, err := GetCookies(ctx, username)
+func StoreSignConfig(ctx context.Context, username string, config models.SignConfigType) error {
+	// 暂时考虑将用户cookie和签到配置分开存储
+
+	configJSON, err := json.Marshal(config)
 	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return "", err
+		log.Printf("数据转换失败: %v\n", err)
+		return err
 	}
 
-	cookies := cookieData.ToCookies()
-	r, err := svc.Rty.R().
-		SetCookies(cookies).
-		Get(globals.GET_USER_INFO_URL)
-	if r.StatusCode() == 302 {
-		log.Println("获取用户信息失败，可能是 Cookie 过期")
-		return "", nil
-	} else if err != nil {
-		return "", err
+	err = svc.Rdb.Set(ctx, "sign_config:"+username, configJSON, 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetSignConfig(ctx context.Context, username string) (*models.SignConfigType, error) {
+	val, err := svc.Rdb.Get(ctx, "sign_config:"+username).Result()
+	if err != nil {
+		if err == redis.Nil {
+			log.Println("签到配置不存在")
+			return nil, nil
+		}
+		log.Printf("获取签到配置失败: %v\n", err)
+		return nil, err
 	}
 
-	data := r.String()
-	name := utils.ParseUserName(data)
-	return name, nil
+	var config models.SignConfigType
+	err = json.Unmarshal([]byte(val), &config)
+	if err != nil {
+		log.Printf("数据转换失败: %v\n", err)
+		return nil, err
+	}
+
+	return &config, nil
 }

@@ -63,3 +63,14 @@ type IMParamsType struct {
 	MyTuid  string `json:"myTuid"`
 	MyPuid  string `json:"myPuid"`
 }
+
+type LocationType struct {
+	Address   string `json:"address"`
+	Latitude  string `json:"latitude"`
+	Longitude string `json:"longitude"`
+}
+
+type SignConfigType struct {
+	Locations []LocationType `json:"locations"`
+	PicUrl    string         `json:"picUrl"` // 图片上传到网盘后的url
+}

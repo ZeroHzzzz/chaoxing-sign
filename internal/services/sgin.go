@@ -9,7 +9,7 @@ import (
 	"log"
 )
 
-func SignLogic(ctx context.Context, act models.ActivityType, lat, lon, address, enc, username string) error {
+func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, username string) error {
 	err := PreSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
 	if err != nil {
 		log.Println(err)
@@ -40,7 +40,8 @@ func SignLogic(ctx context.Context, act models.ActivityType, lat, lon, address, 
 				fmt.Println(err)
 			}
 
-			err = QrcodeSign(ctx, enc, name, act.ActivityID, address, lat, lon, "0", username)
+			// 暂时先传空值
+			err = QrcodeSign(ctx, enc, name, act.ActivityID, "", "lat", "lon", "0", username)
 			if err != nil {
 				log.Println(err)
 				return err
@@ -63,7 +64,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, lat, lon, address, 
 			if err != nil {
 				fmt.Println(err)
 			}
-			err = LocationSign(ctx, name, act.ActivityID, address, lat, lon, username)
+			err = LocationSign(ctx, signCfg, name, act.ActivityID, username)
 			if err != nil {
 				log.Println(err)
 				return err
@@ -235,7 +236,7 @@ func QrcodeSign(ctx context.Context, enc, name, activeId, address, lat, lon, alt
 	return nil
 }
 
-func LocationSign(ctx context.Context, name, activeId, address, lat, lon, username string) error {
+func LocationSign(ctx context.Context, signCfg models.SignConfigType, name, activeId, username string) error {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("获取 Cookie 失败: %v\n", err)
@@ -243,29 +244,37 @@ func LocationSign(ctx context.Context, name, activeId, address, lat, lon, userna
 	}
 
 	cookies := cookieData.ToCookies()
-	r, err := svc.Rty.R().
-		SetCookies(cookies).
-		SetQueryParams(map[string]string{
-			"activeId":  activeId,
-			"address":   address,
-			"uid":       cookieData.Uid,
-			"appType":   "15",
-			"fid":       cookieData.Fid,
-			"name":      name,
-			"clientip":  "",
-			"latitude":  lat,
-			"longitude": lon,
-			"ifTiJiao":  "1",
-		}).
-		Get(globals.PPT_SIGN_URL)
-	if r.StatusCode() == 302 {
-		log.Println("签到失败，可能是 Cookie 过期")
-		return nil
-	} else if err != nil {
-		log.Printf("签到失败: %v\n", err)
-		return err
+	for _, location := range signCfg.Locations {
+		r, err := svc.Rty.R().
+			SetCookies(cookies).
+			SetQueryParams(map[string]string{
+				"activeId":  activeId,
+				"address":   location.Address,
+				"uid":       cookieData.Uid,
+				"appType":   "15",
+				"fid":       cookieData.Fid,
+				"name":      name,
+				"clientip":  "",
+				"latitude":  location.Latitude,
+				"longitude": location.Longitude,
+				"ifTiJiao":  "1",
+			}).
+			Get(globals.PPT_SIGN_URL)
+		if r.StatusCode() == 302 {
+			log.Println("签到失败，可能是 Cookie 过期")
+			return nil
+		} else if err != nil {
+			log.Printf("签到失败: %v\n", err)
+			return err
+		}
+
+		if r.String() != "success" {
+			log.Printf("[Location]: 签到失败， %s\n", r.String())
+			continue
+		}
+		log.Println("[Location]: " + r.String())
+		break
 	}
 
-	log.Println("[Location]: " + r.String())
 	return nil
 }
