@@ -8,6 +8,25 @@ import (
 	"strconv"
 )
 
+func GetActivityLogic(ctx context.Context, course models.CourseType, username string) ([]models.ActivityType, error) {
+	// 本系统将以活动为主而不是课程
+	acts, err := GetActivity(ctx, course, username)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	for _, act := range acts {
+		err = GetPPTActivityInfo(ctx, username, &act)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+	}
+
+	return acts, nil
+}
+
 type GetActivityChaoxingResp struct {
 	Result int `json:"result"`
 	Data   struct {
@@ -24,7 +43,7 @@ type GetActivityChaoxingResp struct {
 }
 
 // 获取课程活动
-func GetActivity(ctx context.Context, course models.CourseType, username string) (*models.ActivityType, error) {
+func GetActivity(ctx context.Context, course models.CourseType, username string) ([]models.ActivityType, error) {
 	var resp GetActivityChaoxingResp
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
@@ -57,28 +76,49 @@ func GetActivity(ctx context.Context, course models.CourseType, username string)
 	// fmt.Println(r.String())
 	// fmt.Println(resp)
 
-	var activity models.ActivityType
-	if len(resp.Data.ActiveList) != 0 {
-		data := resp.Data.ActiveList[0]
+	var activity []models.ActivityType
+	for _, data := range resp.Data.ActiveList {
 		otherID, _ := strconv.Atoi(data.OtherID)
 		if data.Status == 1 && otherID >= 0 && otherID <= 5 {
-			activity = models.ActivityType{
+			activity = append(activity, models.ActivityType{
 				ActivityID: strconv.Itoa(data.ID),
 				OtherID:    otherID,
 				Name:       data.NameOne,
-				CourseID:   course.CourseID,
-				ClassID:    course.ClassID,
-			}
-		} else {
-			log.Println("活动已结束或不支持")
-			return nil, nil
+				Course: models.CourseType{
+					CourseID: course.CourseID,
+					ClassID:  course.ClassID,
+				},
+			})
 		}
-	} else {
-		log.Println("无活动可查")
+	}
+
+	if len(activity) == 0 {
+		log.Println("此课程无活动可查")
 		return nil, nil
 	}
 
-	return &activity, nil
+	return activity, nil
+	// if len(resp.Data.ActiveList) != 0 {
+	// 	data := resp.Data.ActiveList[0]
+	// 	otherID, _ := strconv.Atoi(data.OtherID)
+	// 	if data.Status == 1 && otherID >= 0 && otherID <= 5 {
+	// 		activity = models.ActivityType{
+	// 			ActivityID: strconv.Itoa(data.ID),
+	// 			OtherID:    otherID,
+	// 			Name:       data.NameOne,
+	// 			CourseID:   course.CourseID,
+	// 			ClassID:    course.ClassID,
+	// 		}
+	// 	} else {
+	// 		log.Println("活动已结束或不支持")
+	// 		return nil, nil
+	// 	}
+	// } else {
+	// 	log.Println("无活动可查")
+	// 	return nil, nil
+	// }
+
+	// return &activity, nil
 }
 
 type GetPPTActivityInfoResp struct {

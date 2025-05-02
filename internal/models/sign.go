@@ -3,13 +3,13 @@ package models
 type CourseType struct {
 	CourseID string `json:"courseId"`
 	ClassID  string `json:"classId"`
+	Name     string `json:"name"`
 }
 
 type ActivityType struct {
 	ActivityID           string `json:"activityId"`
 	Name                 string `json:"name"`
-	CourseID             string `json:"courseId"`
-	ClassID              string `json:"classId"`
+	Course               CourseType
 	OtherID              int    `json:"otherId"` // 这个是用来区分签到类型的
 	IfPhoto              int    `json:"ifPhoto"`
 	OpenPreventCheatFlag int    `json:"openPreventCheatFlag"` // 验证码

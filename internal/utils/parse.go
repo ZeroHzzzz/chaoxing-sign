@@ -2,9 +2,12 @@ package utils
 
 import (
 	"chaoxing/internal/models"
+	"log"
 	"net/http"
 	"reflect"
 	"strings"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func ParseAnalysis(data string) string {
@@ -98,41 +101,38 @@ func ParseIMParams(data string) models.IMParamsType {
 	return imParams
 }
 
-func ParseCourse(data string) []models.CourseType {
+func ParseCourseData(data string) []models.CourseType {
 	var courses []models.CourseType
-	i := 0 // 全局索引
+	reader := strings.NewReader(data)
+	doc, err := goquery.NewDocumentFromReader(reader)
+	if err != nil {
+		log.Fatal("加载 HTML 失败：", err)
+		return nil
+	}
 
-	for {
-		courseIndex := strings.Index(data[i:], "course_")
-		if courseIndex == -1 {
-			break
+	doc.Find("li.course.clearfix").Each(func(i int, li *goquery.Selection) {
+		// 获取 courseId 和 clazzId
+		courseId, exists := li.Attr("courseid")
+		if !exists {
+			log.Println("警告：未找到 courseId 属性")
+			return
+		}
+		classId, exists := li.Attr("clazzid")
+		if !exists {
+			log.Println("警告：未找到 clazzId 属性")
+			return
 		}
 
-		i += courseIndex
-		endOfCourseId := strings.Index(data[i+len("course_"):], "_")
-		if endOfCourseId == -1 {
-			break
-		}
-
-		endOfCourseId += i + len("course_")
-		courseId := data[i+len("course_") : endOfCourseId]
-
-		classIdStart := endOfCourseId + 1
-		classIdEnd := strings.Index(data[classIdStart:], `"`)
-		if classIdEnd == -1 {
-			break
-		}
-
-		classIdEnd += classIdStart
-		classId := data[classIdStart:classIdEnd]
-
+		// 在 <li> 中查找课程名
+		span := li.Find("span.course-name.overHidden2")
+		titleAttr, _ := span.Attr("title") // 虽然我们检查了是否存在，但这里假定总是存在的
+		// textContent := span.Text()
 		courses = append(courses, models.CourseType{
 			CourseID: courseId,
 			ClassID:  classId,
+			Name:     titleAttr,
 		})
-
-		i = classIdEnd + 1
-	}
+	})
 
 	return courses
 }

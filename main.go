@@ -5,7 +5,6 @@ import (
 	"chaoxing/internal/pkg/resty"
 	"chaoxing/internal/services"
 	"context"
-	"fmt"
 	"log"
 )
 
@@ -51,28 +50,35 @@ func main() {
 		log.Println(err)
 	}
 	log.Println(config)
+
 	courses, err := services.GetCourses(ctx, "19033952880")
 
 	if err != nil {
 		log.Println(err)
 	}
+	log.Println(courses)
 
-	log.Println(courses[0])
-	act, err := services.GetActivity(ctx, courses[0], "19033952880")
-	if err != nil {
-		fmt.Println(err)
-	}
-	log.Println(act)
+	// log.Println(courses[0])
+	// act, err := services.GetActivity(ctx, courses[0], "19033952880")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// log.Println(act)
 
-	err = services.GetPPTActivityInfo(ctx, "19033952880", act)
+	// err = services.GetPPTActivityInfo(ctx, "19033952880", &act[0])
 
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(act)
+	// log.Println("otherID: ", act[0].OtherID)
+
+	act, err := services.GetActivityLogic(ctx, courses[0], "19033952880")
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println(act)
-	log.Println("otherID: ", act.OtherID)
 
-	err = services.SignLogic(ctx, *act, *config, "", "19033952880")
+	err = services.SignLogic(ctx, act[0], *config, "", "19033952880")
 	if err != nil {
 		log.Println(err)
 	}

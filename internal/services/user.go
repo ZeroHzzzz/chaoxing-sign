@@ -79,7 +79,7 @@ func GetCourses(ctx context.Context, username string) ([]models.CourseType, erro
 
 	data := r.String()
 
-	courses := utils.ParseCourse(data)
+	courses := utils.ParseCourseData(data)
 
 	if len(courses) == 0 {
 		log.Println("无课程可查")

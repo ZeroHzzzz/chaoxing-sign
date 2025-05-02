@@ -11,7 +11,7 @@ import (
 )
 
 func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, username string) error {
-	status := PreSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+	status := PreSign(ctx, act, username)
 	if !status {
 		return xerr.PreSignErr
 	}
@@ -23,7 +23,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 				// todo: 补充拍照签到逻辑
 			} else {
 				// 普通签到
-				status = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+				status = GeneralSign(ctx, act, username)
 				if !status {
 					return xerr.SignErr
 				}
@@ -50,7 +50,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 		{
 			// 手势签到
 			// Todo：这里有些问题，需要后续修改
-			status = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+			status = GeneralSign(ctx, act, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -83,7 +83,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 		{
 			// 签到码签到
 			// Todo：这里有些问题，需要后续修改
-			status = GeneralSign(ctx, act.ActivityID, act.CourseID, act.ClassID, username)
+			status = GeneralSign(ctx, act, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -93,7 +93,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 
 	return nil
 }
-func PreSign(ctx context.Context, activityID, courseID, classID, username string) bool {
+func PreSign(ctx context.Context, act models.ActivityType, username string) bool {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("[PreSign] 获取 Cookie 失败: %v\n", err)
@@ -104,9 +104,9 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 	r, err := svc.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
-			"courseId":        courseID,
-			"classId":         classID,
-			"activePrimaryId": activityID,
+			"courseId":        act.Course.CourseID,
+			"classId":         act.Course.ClassID,
+			"activePrimaryId": act.ActivityID,
 			"general":         "1",
 			"sys":             "1",
 			"ls":              "1",
@@ -129,7 +129,7 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 		SetQueryParams(map[string]string{
 			"vs":          "1",
 			"DB_STRATEGY": "RANDOM",
-			"aid":         activityID,
+			"aid":         act.ActivityID,
 		}).
 		Get(globals.ANALYSIS_URL)
 	if r.StatusCode() == 302 {
@@ -162,7 +162,7 @@ func PreSign(ctx context.Context, activityID, courseID, classID, username string
 	return true
 }
 
-func GeneralSign(ctx context.Context, activityID, courseID, classID, username string) bool {
+func GeneralSign(ctx context.Context, act models.ActivityType, username string) bool {
 	cookieData, err := GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("[通用] 获取 Cookie 失败: %v\n", err)
@@ -173,7 +173,7 @@ func GeneralSign(ctx context.Context, activityID, courseID, classID, username st
 	r, err := svc.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
-			"activeId":  activityID,
+			"activeId":  act.ActivityID,
 			"uid":       cookieData.Uid,
 			"latitude":  "-1",
 			"longitude": "-1",
