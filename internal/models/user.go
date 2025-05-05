@@ -28,6 +28,12 @@ type UserCookieType struct {
 	Fid string `json:"fid"`
 }
 
+// 新增关联账户模型
+type LinkedAccounts struct {
+	MainUsername string   `json:"main_username"` // 主账户用户名
+	SubAccounts  []string `json:"sub_accounts"`  // 关联的子账户用户名列表
+}
+
 func (uc *UserCookieType) ToCookies() []*http.Cookie {
 	var cookies []*http.Cookie
 

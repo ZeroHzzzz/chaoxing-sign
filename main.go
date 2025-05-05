@@ -1,22 +1,25 @@
 package main
 
 import (
+	"chaoxing/internal/chaoxing"
 	"chaoxing/internal/pkg/redis"
 	"chaoxing/internal/pkg/resty"
-	"chaoxing/internal/services"
 	"context"
 	"log"
 )
 
 var ctx = context.Background()
+var uname = "19033952880"
 
 func main() {
 	rty := resty.GetRty()
 	rdb := redis.GetRdb()
 
-	services.ServiceInit(rty, rdb)
+	// services.ServiceInit(rty, rdb)
 
-	_, err := services.LoginByPass(ctx, "19033952880", "Zhz050108")
+	chao := chaoxing.NewChaoxing(ctx, rty, rdb)
+
+	_, err := chao.LoginByPass(ctx, uname, "Zhz050108")
 	if err != nil {
 		log.Println(err)
 	}
@@ -45,18 +48,18 @@ func main() {
 	// 	fmt.Println(err)
 	// }
 
-	config, err := services.GetSignConfig(ctx, "19033952880")
-	if err != nil {
-		log.Println(err)
-	}
-	log.Println(config)
+	// config, err := services.GetSignConfig(ctx, uname)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(config)
 
-	courses, err := services.GetCourses(ctx, "19033952880")
+	// courses, err := services.GetCourses(ctx, uname)
 
-	if err != nil {
-		log.Println(err)
-	}
-	log.Println(courses)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(courses)
 
 	// log.Println(courses[0])
 	// act, err := services.GetActivity(ctx, courses[0], "19033952880")
@@ -73,21 +76,22 @@ func main() {
 	// log.Println(act)
 	// log.Println("otherID: ", act[0].OtherID)
 
-	act, err := services.GetActivityLogic(ctx, courses[0], "19033952880")
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = services.SignLogic(ctx, act[0], *config, "", "19033952880")
-	if err != nil {
-		log.Println(err)
-	}
-
-	// imparam, err := services.GetIMParams(ctx, "19033952880")
+	// act, err := services.GetActivityLogic(ctx, courses[0], uname)
 	// if err != nil {
-	// 	fmt.Println(err)
+	// 	log.Println(err)
 	// }
-	// fmt.Println(imparam)
+
+	// log.Println(act)
+	// err = services.SignLogic(ctx, act[0], *config, "", uname)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
+	// imparam, err := services.GetIMParams(ctx, uname)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(imparam)
 
 	// err = services.PreSign(ctx, act.ActivityID, courses[0].CourseID, courses[0].ClassID, "19033952880")
 	// if err != nil {

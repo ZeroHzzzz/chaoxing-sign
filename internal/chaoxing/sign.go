@@ -1,4 +1,4 @@
-package services
+package chaoxing
 
 import (
 	"chaoxing/internal/globals"
@@ -8,10 +8,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 )
 
-func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, username string) error {
-	status := PreSign(ctx, act, username)
+func (c *Chaoxing) SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, username string) error {
+	status := c.PreSign(ctx, act, username)
 	if !status {
 		return xerr.PreSignErr
 	}
@@ -23,7 +24,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 				// todo: 补充拍照签到逻辑
 			} else {
 				// 普通签到
-				status = GeneralSign(ctx, act, username)
+				status = c.GeneralSign(ctx, act, username)
 				if !status {
 					return xerr.SignErr
 				}
@@ -34,13 +35,13 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 		{
 			// 二维码
 			// 先获取用户名
-			name, err := GetUserName(ctx, username)
+			name, err := c.GetUserName(ctx, username)
 			if err != nil {
 				fmt.Println(err)
 			}
 
 			// 暂时先传空值
-			status = QrcodeSign(ctx, models.LocationType{}, enc, name, act.ActivityID, username)
+			status = c.QrcodeSign(ctx, models.LocationType{}, enc, name, act.ActivityID, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -50,7 +51,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 		{
 			// 手势签到
 			// Todo：这里有些问题，需要后续修改
-			status = GeneralSign(ctx, act, username)
+			status = c.GeneralSign(ctx, act, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -59,7 +60,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 	case 4:
 		{
 			// 定位签到
-			name, err := GetUserName(ctx, username)
+			name, err := c.GetUserName(ctx, username)
 			if err != nil {
 				fmt.Println(err)
 				return err
@@ -67,7 +68,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 
 			var signFlag = false
 			for _, location := range signCfg.Locations {
-				status = LocationSign(ctx, location, name, act.ActivityID, username)
+				status = c.LocationSign(ctx, location, name, act.ActivityID, username)
 				if status {
 					signFlag = true
 					break
@@ -83,7 +84,7 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 		{
 			// 签到码签到
 			// Todo：这里有些问题，需要后续修改
-			status = GeneralSign(ctx, act, username)
+			status = c.GeneralSign(ctx, act, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -93,15 +94,15 @@ func SignLogic(ctx context.Context, act models.ActivityType, signCfg models.Sign
 
 	return nil
 }
-func PreSign(ctx context.Context, act models.ActivityType, username string) bool {
-	cookieData, err := GetCookies(ctx, username)
+func (c *Chaoxing) PreSign(ctx context.Context, act models.ActivityType, username string) bool {
+	cookieData, err := c.GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("[PreSign] 获取 Cookie 失败: %v\n", err)
 		return false
 	}
 
 	cookies := cookieData.ToCookies()
-	r, err := svc.Rty.R().
+	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"courseId":        act.Course.CourseID,
@@ -124,7 +125,7 @@ func PreSign(ctx context.Context, act models.ActivityType, username string) bool
 	}
 
 	// ANALYSIS
-	r, err = svc.Rty.R().
+	r, err = c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"vs":          "1",
@@ -143,7 +144,7 @@ func PreSign(ctx context.Context, act models.ActivityType, username string) bool
 	code := utils.ParseAnalysis(r.String())
 
 	// ANALYSIS2
-	r, err = svc.Rty.R().
+	r, err = c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"DB_STRATEGY": "RANDOM",
@@ -162,15 +163,15 @@ func PreSign(ctx context.Context, act models.ActivityType, username string) bool
 	return true
 }
 
-func GeneralSign(ctx context.Context, act models.ActivityType, username string) bool {
-	cookieData, err := GetCookies(ctx, username)
+func (c *Chaoxing) GeneralSign(ctx context.Context, act models.ActivityType, username string) bool {
+	cookieData, err := c.GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("[通用] 获取 Cookie 失败: %v\n", err)
 		return false
 	}
 
 	cookies := cookieData.ToCookies()
-	r, err := svc.Rty.R().
+	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"activeId":  act.ActivityID,
@@ -201,8 +202,8 @@ func GeneralSign(ctx context.Context, act models.ActivityType, username string) 
 	return true
 }
 
-func QrcodeSign(ctx context.Context, location models.LocationType, enc, name, activeId, username string) bool {
-	cookieData, err := GetCookies(ctx, username)
+func (c *Chaoxing) QrcodeSign(ctx context.Context, location models.LocationType, enc, name, activeId, username string) bool {
+	cookieData, err := c.GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("[Qrcode] 获取 Cookie 失败: %v\n", err)
 		return false
@@ -210,7 +211,7 @@ func QrcodeSign(ctx context.Context, location models.LocationType, enc, name, ac
 
 	formated_location := fmt.Sprintf("{\"result\":\"1\",\"address\":\"%s\",\"latitude\":%s,\"longitude\":%s,\"altitude\":%s}", location.Address, location.Latitude, location.Longitude, location.Altitude)
 	cookies := cookieData.ToCookies()
-	r, err := svc.Rty.R().
+	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"enc":       enc,
@@ -245,15 +246,15 @@ func QrcodeSign(ctx context.Context, location models.LocationType, enc, name, ac
 	return true
 }
 
-func LocationSign(ctx context.Context, location models.LocationType, name, activeId, username string) bool {
-	cookieData, err := GetCookies(ctx, username)
+func (c *Chaoxing) LocationSign(ctx context.Context, location models.LocationType, name, activeId, username string) bool {
+	cookieData, err := c.GetCookies(ctx, username)
 	if err != nil {
 		log.Printf("[Location] 获取 Cookie 失败: %v\n", err)
 		return false
 	}
 
 	cookies := cookieData.ToCookies()
-	r, err := svc.Rty.R().
+	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"activeId":  activeId,
@@ -284,4 +285,154 @@ func LocationSign(ctx context.Context, location models.LocationType, name, activ
 	}
 
 	return true
+}
+
+func (c *Chaoxing) GetActivityLogic(ctx context.Context, course models.CourseType, username string) ([]models.ActivityType, error) {
+	// 本系统将以活动为主而不是课程
+	acts, err := c.GetActivity(ctx, course, username)
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	for _, act := range acts {
+		err = c.GetPPTActivityInfo(ctx, username, &act)
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+	}
+
+	return acts, nil
+}
+
+type GetActivityChaoxingResp struct {
+	Result int `json:"result"`
+	Data   struct {
+		ActiveList []struct {
+			Status     int    `json:"status"`
+			NameHour   string `json:"nameHour"`
+			ID         int    `json:"id"`
+			OtherID    string `json:"otherId"`
+			NameOne    string `json:"nameOne"`
+			ActiveType int    `json:"activeType"`
+		} `json:"activeList"`
+	} `json:"data"`
+	ErrorMsg string `json:"errorMsg"`
+}
+
+// 获取课程活动
+func (c *Chaoxing) GetActivity(ctx context.Context, course models.CourseType, username string) ([]models.ActivityType, error) {
+	var resp GetActivityChaoxingResp
+	cookieData, err := c.GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return nil, err
+	}
+	formData := map[string]string{
+		"fid":      "0",
+		"courseId": course.CourseID,
+		"classId":  course.ClassID,
+		// "_":        strconv.FormatInt(time.Now().Unix(), 10),
+	}
+
+	cookies := cookieData.ToCookies()
+	r, err := c.Rty.R().
+		SetCookies(cookies).
+		SetQueryParams(formData).
+		SetResult(&resp).
+		Get(globals.GET_ACTIVITY_URL)
+
+	if err != nil {
+		log.Printf("获取活动列表失败: %v\n", err)
+		return nil, err
+	}
+
+	if r.StatusCode() == 302 {
+		log.Println("获取活动列表失败，可能是 Cookie 过期")
+		return nil, nil
+	}
+	// fmt.Println(r.String())
+	// fmt.Println(resp)
+
+	var activity []models.ActivityType
+	for _, data := range resp.Data.ActiveList {
+		otherID, _ := strconv.Atoi(data.OtherID)
+		if data.Status == 1 && otherID >= 0 && otherID <= 5 {
+			activity = append(activity, models.ActivityType{
+				ActivityID: strconv.Itoa(data.ID),
+				OtherID:    otherID,
+				Name:       data.NameOne,
+				Course: models.CourseType{
+					CourseID: course.CourseID,
+					ClassID:  course.ClassID,
+				},
+			})
+		}
+	}
+
+	if len(activity) == 0 {
+		log.Println("此课程无活动可查")
+		return nil, nil
+	}
+
+	return activity, nil
+	// if len(resp.Data.ActiveList) != 0 {
+	// 	data := resp.Data.ActiveList[0]
+	// 	otherID, _ := strconv.Atoi(data.OtherID)
+	// 	if data.Status == 1 && otherID >= 0 && otherID <= 5 {
+	// 		activity = models.ActivityType{
+	// 			ActivityID: strconv.Itoa(data.ID),
+	// 			OtherID:    otherID,
+	// 			Name:       data.NameOne,
+	// 			CourseID:   course.CourseID,
+	// 			ClassID:    course.ClassID,
+	// 		}
+	// 	} else {
+	// 		log.Println("活动已结束或不支持")
+	// 		return nil, nil
+	// 	}
+	// } else {
+	// 	log.Println("无活动可查")
+	// 	return nil, nil
+	// }
+
+	// return &activity, nil
+}
+
+type GetPPTActivityInfoResp struct {
+	ErrorMsg string `json:"errorMsg"`
+	Data     struct {
+		Ifphoto int `json:"ifphoto"`
+		// 这三个参数启用验证码的时候全都是1，可以考虑只保留一个
+		OpenPreventCheatFlag int `json:"openPreventCheatFlag"`
+		ShowVCode            int `json:"showVCode"`
+		IfNeedVCode          int `json:"ifNeedVCode"`
+	} `json:"data"`
+}
+
+// 获取活动信息（验证码、图片）
+func (c *Chaoxing) GetPPTActivityInfo(ctx context.Context, username string, activity *models.ActivityType) error {
+	var resp GetPPTActivityInfoResp
+	cookieData, err := c.GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("获取 Cookie 失败: %v\n", err)
+		return err
+	}
+	cookies := cookieData.ToCookies()
+
+	r, err := c.Rty.R().
+		SetCookies(cookies).
+		SetQueryParam("activeId", activity.ActivityID).
+		SetResult(&resp).
+		Get(globals.GET_ACTIVITY_INFO_URL)
+
+	if err != nil && r.StatusCode() == 302 {
+		log.Println("获取活动信息失败，可能是 Cookie 过期")
+		return nil
+	}
+
+	activity.OpenPreventCheatFlag = resp.Data.OpenPreventCheatFlag
+	activity.IfPhoto = resp.Data.Ifphoto
+	return nil
 }
