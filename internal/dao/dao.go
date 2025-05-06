@@ -24,6 +24,6 @@ type Daos interface {
 	GetChaoxingCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error)
 	NewChaoxingCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error
 
-	NewUserSignConfig(ctx context.Context, username string, config models.SignConfigType) error
-	GetUserSignConfig(ctx context.Context, username string) (*models.SignConfigType, error)
+	NewUserSignConfig(ctx context.Context, phone string, config models.SignConfigType) error
+	GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error)
 }

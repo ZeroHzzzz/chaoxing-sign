@@ -1,29 +1,21 @@
 package main
 
-import (
-	"chaoxing/internal/chaoxing"
-	"chaoxing/internal/pkg/redis"
-	"chaoxing/internal/pkg/resty"
-	"context"
-	"log"
-)
-
-var ctx = context.Background()
-var uname = "19033952880"
+// var ctx = context.Background()
+// var uname = "19033952880"
 
 func main() {
-	rty := resty.GetRty()
-	rdb := redis.GetRdb()
+	// rty := resty.GetRty()
+	// rdb := redis.GetRdb()
 
 	// services.ServiceInit(rty, rdb)
 
-	chao := chaoxing.NewChaoxing(ctx, rty, rdb)
+	// chao := chaoxing.NewChaoxing(rty, rdb)
 
-	data, err := chao.LoginByPass(ctx, uname, "Zhz050108")
-	if err != nil {
-		log.Println(err)
-	}
-	log.Println(data)
+	// data, err := chao.LoginByPass(ctx, uname, "Zhz050108")
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+	// log.Println(data)
 	// config := models.SignConfigType{
 	// 	Locations: []models.LocationType{
 	// 		{

@@ -9,7 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func (c *Dao) NewUserSignConfig(ctx context.Context, username string, config models.SignConfigType) error {
+func (c *Dao) NewUserSignConfig(ctx context.Context, phone string, config models.SignConfigType) error {
 	// 暂时考虑将用户cookie和签到配置分开存储
 
 	configJSON, err := json.Marshal(config)
@@ -18,15 +18,15 @@ func (c *Dao) NewUserSignConfig(ctx context.Context, username string, config mod
 		return err
 	}
 
-	err = c.Rdb.Set(ctx, "sign_config:"+username, configJSON, 0).Err()
+	err = c.Rdb.Set(ctx, "sign_config:"+phone, configJSON, 0).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Dao) GetUserSignConfig(ctx context.Context, username string) (*models.SignConfigType, error) {
-	val, err := c.Rdb.Get(ctx, "sign_config:"+username).Result()
+func (c *Dao) GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error) {
+	val, err := c.Rdb.Get(ctx, "sign_config:"+phone).Result()
 	if err != nil {
 		if err == redis.Nil {
 			log.Println("签到配置不存在")

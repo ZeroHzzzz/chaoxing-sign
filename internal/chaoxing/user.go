@@ -17,13 +17,13 @@ func (c *Chaoxing) UpdateCookie(cookie models.ChaoxingCookieType) {
 	c.Cookie = &cookie
 }
 
-func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password string) (models.ChaoxingCookieType, error) {
+func (c *Chaoxing) LoginByPass(ctx context.Context, phone string, password string) (models.ChaoxingCookieType, error) {
 	encryptedPassword, err := utils.EncryptByAES(password, globals.Secret)
 	if err != nil {
 		return models.ChaoxingCookieType{}, err
 	}
 
-	encryptedUsername, err := utils.EncryptByAES(username, globals.Secret)
+	encryptedUsername, err := utils.EncryptByAES(phone, globals.Secret)
 	if err != nil {
 		return models.ChaoxingCookieType{}, err
 	}
@@ -90,7 +90,7 @@ func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password st
 		return models.ChaoxingCookieType{}, err
 	}
 
-	// err = c.StoreCookies(ctx, username, cookie)
+	// err = c.StoreCookies(ctx, phone, cookie)
 	// if err != nil {
 	// 	log.Printf("存储 Cookie 失败: %v\n", err)
 	// 	return models.ChaoxingCookieType{}, err
@@ -99,7 +99,7 @@ func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password st
 	return cookie, nil
 }
 
-func (c *Chaoxing) GetPanToken(ctx context.Context, username string) (string, error) {
+func (c *Chaoxing) GetPanToken(ctx context.Context) (string, error) {
 	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
@@ -126,7 +126,7 @@ func (c *Chaoxing) GetPanToken(ctx context.Context, username string) (string, er
 	return token, nil
 }
 
-func (c *Chaoxing) GetCourses(ctx context.Context, username string) ([]models.CourseType, error) {
+func (c *Chaoxing) GetCourses(ctx context.Context) ([]models.CourseType, error) {
 
 	formData := map[string]string{
 		"courseType":       "1",
@@ -164,7 +164,7 @@ func (c *Chaoxing) GetCourses(ctx context.Context, username string) ([]models.Co
 	return courses, nil
 }
 
-func (c *Chaoxing) GetUserName(ctx context.Context, username string) (string, error) {
+func (c *Chaoxing) GetUserName(ctx context.Context) (string, error) {
 	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
@@ -183,7 +183,7 @@ func (c *Chaoxing) GetUserName(ctx context.Context, username string) (string, er
 }
 
 // 获取IM参数（登录用）
-func (c *Chaoxing) GetIMParams(ctx context.Context, username string) (*models.IMParamsType, error) {
+func (c *Chaoxing) GetIMParams(ctx context.Context) (*models.IMParamsType, error) {
 	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
