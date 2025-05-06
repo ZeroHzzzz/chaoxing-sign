@@ -10,28 +10,30 @@ import (
 
 type Chaoxing struct {
 	Rty *resty.Client
-	Rdb *redis.Client
+	// Rdb *redis.Client
+	Cookie *models.ChaoxingCookieType
 }
 
 func NewChaoxing(ctx context.Context, rty *resty.Client, rdb *redis.Client) Chaoxings {
 	return &Chaoxing{
 		Rty: rty,
-		Rdb: rdb,
+		// Rdb: rdb,
 	}
 }
 
 type Chaoxings interface {
-	// user
-	GetCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error)
-	StoreCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error
+	// // user
+	// GetCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error)
+	// StoreCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error
+	UpdateCookie(cookie models.ChaoxingCookieType)
 	LoginByPass(ctx context.Context, username string, password string) (models.ChaoxingCookieType, error)
 	GetPanToken(ctx context.Context, username string) (string, error)
 	GetCourses(ctx context.Context, username string) ([]models.CourseType, error)
 	GetUserName(ctx context.Context, username string) (string, error)
 	GetIMParams(ctx context.Context, username string) (*models.IMParamsType, error)
 
-	StoreSignConfig(ctx context.Context, username string, config models.SignConfigType) error
-	GetSignConfig(ctx context.Context, username string) (*models.SignConfigType, error)
+	// StoreSignConfig(ctx context.Context, username string, config models.SignConfigType) error
+	// GetSignConfig(ctx context.Context, username string) (*models.SignConfigType, error)
 
 	// sign
 	GetPPTActivityInfo(ctx context.Context, username string, activity *models.ActivityType) error

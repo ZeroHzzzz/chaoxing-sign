@@ -9,11 +9,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"dario.cat/mergo"
-	"github.com/redis/go-redis/v9"
 )
+
+func (c *Chaoxing) UpdateCookie(cookie models.ChaoxingCookieType) {
+	c.Cookie = &cookie
+}
 
 func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password string) (models.ChaoxingCookieType, error) {
 	encryptedPassword, err := utils.EncryptByAES(password, globals.Secret)
@@ -88,59 +90,17 @@ func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password st
 		return models.ChaoxingCookieType{}, err
 	}
 
-	err = c.StoreCookies(ctx, username, cookie)
-	if err != nil {
-		log.Printf("存储 Cookie 失败: %v\n", err)
-		return models.ChaoxingCookieType{}, err
-	}
+	// err = c.StoreCookies(ctx, username, cookie)
+	// if err != nil {
+	// 	log.Printf("存储 Cookie 失败: %v\n", err)
+	// 	return models.ChaoxingCookieType{}, err
+	// }
 	// log.Printf("登录成功: %v\n", cookie)
 	return cookie, nil
 }
 
-func (c *Chaoxing) StoreCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error {
-	cookieJSON, err := json.Marshal(cookie)
-	if err != nil {
-		log.Printf("数据转换失败: %v\n", err)
-		return err
-	}
-
-	err = c.Rdb.Set(ctx, "cookie:"+key, cookieJSON, 2*time.Hour).Err() // 两小时过期
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Chaoxing) GetCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error) {
-	val, err := c.Rdb.Get(ctx, "cookie:"+key).Result()
-	if err != nil {
-		if err == redis.Nil {
-			// todo: 处理 Cookie 过期的情况
-			return nil, err
-		}
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return nil, err
-	}
-
-	var cookie models.ChaoxingCookieType
-	err = json.Unmarshal([]byte(val), &cookie)
-	if err != nil {
-		log.Printf("数据转换失败: %v\n", err)
-		return nil, err
-	}
-
-	return &cookie, nil
-}
-
 func (c *Chaoxing) GetPanToken(ctx context.Context, username string) (string, error) {
-	cookie, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return "", err
-	}
-
-	cookies := cookie.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		Get(globals.GET_PANTOKEN_URL)
@@ -167,11 +127,6 @@ func (c *Chaoxing) GetPanToken(ctx context.Context, username string) (string, er
 }
 
 func (c *Chaoxing) GetCourses(ctx context.Context, username string) ([]models.CourseType, error) {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return nil, err
-	}
 
 	formData := map[string]string{
 		"courseType":       "1",
@@ -185,7 +140,7 @@ func (c *Chaoxing) GetCourses(ctx context.Context, username string) ([]models.Co
 			"Accept-Encoding": "gzip, deflate",
 			"Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 			"Content-Type":    "application/x-www-form-urlencoded; charset=UTF-8",
-			"Cookie":          fmt.Sprintf("_uid=%s; _d=%s; vc3=%s", cookieData.Uid, cookieData.D, cookieData.Vc3),
+			"Cookie":          fmt.Sprintf("_uid=%s; _d=%s; vc3=%s", c.Cookie.Uid, c.Cookie.D, c.Cookie.Vc3),
 		}). // 这里cookie格式特殊，因此使用了SetHeaders直接拼接
 		SetFormData(formData).
 		Post(globals.GET_COURSELIST_URL)
@@ -210,13 +165,7 @@ func (c *Chaoxing) GetCourses(ctx context.Context, username string) ([]models.Co
 }
 
 func (c *Chaoxing) GetUserName(ctx context.Context, username string) (string, error) {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Println("获取 Cookie 失败: ", err)
-		return "", xerr.NotLoginErr
-	}
-
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		Get(globals.GET_USER_INFO_URL)
@@ -235,13 +184,7 @@ func (c *Chaoxing) GetUserName(ctx context.Context, username string) (string, er
 
 // 获取IM参数（登录用）
 func (c *Chaoxing) GetIMParams(ctx context.Context, username string) (*models.IMParamsType, error) {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return nil, err
-	}
-
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		Get(globals.GET_WEBIM_URL)
@@ -258,43 +201,6 @@ func (c *Chaoxing) GetIMParams(ctx context.Context, username string) (*models.IM
 
 	imParams := utils.ParseIMParams(data)
 	// Puid为uid
-	imParams.MyPuid = cookieData.Uid
+	imParams.MyPuid = c.Cookie.Uid
 	return &imParams, nil
-}
-
-func (c *Chaoxing) StoreSignConfig(ctx context.Context, username string, config models.SignConfigType) error {
-	// 暂时考虑将用户cookie和签到配置分开存储
-
-	configJSON, err := json.Marshal(config)
-	if err != nil {
-		log.Printf("数据转换失败: %v\n", err)
-		return err
-	}
-
-	err = c.Rdb.Set(ctx, "sign_config:"+username, configJSON, 0).Err()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Chaoxing) GetSignConfig(ctx context.Context, username string) (*models.SignConfigType, error) {
-	val, err := c.Rdb.Get(ctx, "sign_config:"+username).Result()
-	if err != nil {
-		if err == redis.Nil {
-			log.Println("签到配置不存在")
-			return nil, nil
-		}
-		log.Printf("获取签到配置失败: %v\n", err)
-		return nil, err
-	}
-
-	var config models.SignConfigType
-	err = json.Unmarshal([]byte(val), &config)
-	if err != nil {
-		log.Printf("数据转换失败: %v\n", err)
-		return nil, err
-	}
-
-	return &config, nil
 }

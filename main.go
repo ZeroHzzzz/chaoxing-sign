@@ -19,11 +19,11 @@ func main() {
 
 	chao := chaoxing.NewChaoxing(ctx, rty, rdb)
 
-	_, err := chao.LoginByPass(ctx, uname, "Zhz050108")
+	data, err := chao.LoginByPass(ctx, uname, "Zhz050108")
 	if err != nil {
 		log.Println(err)
 	}
-
+	log.Println(data)
 	// config := models.SignConfigType{
 	// 	Locations: []models.LocationType{
 	// 		{

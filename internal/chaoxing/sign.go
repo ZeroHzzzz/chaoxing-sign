@@ -93,13 +93,7 @@ func (c *Chaoxing) SignLogic(ctx context.Context, act models.ActivityType, signC
 	return nil
 }
 func (c *Chaoxing) PreSign(ctx context.Context, act models.ActivityType, username string) bool {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("[PreSign] 获取 Cookie 失败: %v\n", err)
-		return false
-	}
-
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
@@ -110,7 +104,7 @@ func (c *Chaoxing) PreSign(ctx context.Context, act models.ActivityType, usernam
 			"sys":             "1",
 			"ls":              "1",
 			"appType":         "15",
-			"uid":             cookieData.Uid,
+			"uid":             c.Cookie.Uid,
 			"ut":              "s",
 		}).
 		Get(globals.PRESIGN_URL)
@@ -162,22 +156,16 @@ func (c *Chaoxing) PreSign(ctx context.Context, act models.ActivityType, usernam
 }
 
 func (c *Chaoxing) GeneralSign(ctx context.Context, act models.ActivityType, username string) bool {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("[通用] 获取 Cookie 失败: %v\n", err)
-		return false
-	}
-
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"activeId":  act.ActivityID,
-			"uid":       cookieData.Uid,
+			"uid":       c.Cookie.Uid,
 			"latitude":  "-1",
 			"longitude": "-1",
 			"appType":   "15",
-			"fid":       cookieData.Fid,
+			"fid":       c.Cookie.Fid,
 			"name":      username,
 		}).
 		Get(globals.PPT_SIGN_URL)
@@ -201,22 +189,16 @@ func (c *Chaoxing) GeneralSign(ctx context.Context, act models.ActivityType, use
 }
 
 func (c *Chaoxing) CodeSign(ctx context.Context, act models.ActivityType, signCode, username string) bool {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("[通用] 获取 Cookie 失败: %v\n", err)
-		return false
-	}
-
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"activeId":  act.ActivityID,
-			"uid":       cookieData.Uid,
+			"uid":       c.Cookie.Uid,
 			"latitude":  "-1",
 			"longitude": "-1",
 			"appType":   "15",
-			"fid":       cookieData.Fid,
+			"fid":       c.Cookie.Fid,
 			"signCode":  signCode,
 			"name":      username,
 		}).
@@ -241,23 +223,17 @@ func (c *Chaoxing) CodeSign(ctx context.Context, act models.ActivityType, signCo
 }
 
 func (c *Chaoxing) QrcodeSign(ctx context.Context, location models.LocationType, enc, name, activeId, username string) bool {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("[Qrcode] 获取 Cookie 失败: %v\n", err)
-		return false
-	}
-
 	formated_location := fmt.Sprintf("{\"result\":\"1\",\"address\":\"%s\",\"latitude\":%s,\"longitude\":%s,\"altitude\":%s}", location.Address, location.Latitude, location.Longitude, location.Altitude)
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"enc":       enc,
 			"activeId":  activeId,
-			"uid":       cookieData.Uid,
+			"uid":       c.Cookie.Uid,
 			"location":  formated_location,
 			"appType":   "15",
-			"fid":       cookieData.Fid,
+			"fid":       c.Cookie.Fid,
 			"name":      name,
 			"clientip":  "",
 			"latitude":  "-1",
@@ -285,21 +261,15 @@ func (c *Chaoxing) QrcodeSign(ctx context.Context, location models.LocationType,
 }
 
 func (c *Chaoxing) LocationSign(ctx context.Context, location models.LocationType, name, activeId, username string) bool {
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("[Location] 获取 Cookie 失败: %v\n", err)
-		return false
-	}
-
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(map[string]string{
 			"activeId":  activeId,
 			"address":   location.Address,
-			"uid":       cookieData.Uid,
+			"uid":       c.Cookie.Uid,
 			"appType":   "15",
-			"fid":       cookieData.Fid,
+			"fid":       c.Cookie.Fid,
 			"name":      name,
 			"clientip":  "",
 			"latitude":  location.Latitude,
@@ -362,11 +332,7 @@ type GetActivityChaoxingResp struct {
 // 获取课程活动
 func (c *Chaoxing) GetActivity(ctx context.Context, course models.CourseType, username string) ([]models.ActivityType, error) {
 	var resp GetActivityChaoxingResp
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return nil, err
-	}
+
 	formData := map[string]string{
 		"fid":      "0",
 		"courseId": course.CourseID,
@@ -374,7 +340,7 @@ func (c *Chaoxing) GetActivity(ctx context.Context, course models.CourseType, us
 		// "_":        strconv.FormatInt(time.Now().Unix(), 10),
 	}
 
-	cookies := cookieData.ToCookies()
+	cookies := c.Cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		SetQueryParams(formData).
@@ -452,12 +418,8 @@ type GetPPTActivityInfoResp struct {
 // 获取活动信息（验证码、图片）
 func (c *Chaoxing) GetPPTActivityInfo(ctx context.Context, username string, activity *models.ActivityType) error {
 	var resp GetPPTActivityInfoResp
-	cookieData, err := c.GetCookies(ctx, username)
-	if err != nil {
-		log.Printf("获取 Cookie 失败: %v\n", err)
-		return err
-	}
-	cookies := cookieData.ToCookies()
+
+	cookies := c.Cookie.ToCookies()
 
 	r, err := c.Rty.R().
 		SetCookies(cookies).
