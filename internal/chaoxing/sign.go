@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-func (c *Chaoxing) SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, username string) error {
+func (c *Chaoxing) SignLogic(ctx context.Context, act models.ActivityType, signCfg models.SignConfigType, enc, signCode, username string) error {
 	status := c.PreSign(ctx, act, username)
 	if !status {
 		return xerr.PreSignErr
@@ -50,8 +50,7 @@ func (c *Chaoxing) SignLogic(ctx context.Context, act models.ActivityType, signC
 	case 3:
 		{
 			// 手势签到
-			// Todo：这里有些问题，需要后续修改
-			status = c.GeneralSign(ctx, act, username)
+			status = c.CodeSign(ctx, act, signCode, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -83,8 +82,7 @@ func (c *Chaoxing) SignLogic(ctx context.Context, act models.ActivityType, signC
 	case 5:
 		{
 			// 签到码签到
-			// Todo：这里有些问题，需要后续修改
-			status = c.GeneralSign(ctx, act, username)
+			status = c.CodeSign(ctx, act, signCode, username)
 			if !status {
 				return xerr.SignErr
 			}
@@ -180,6 +178,46 @@ func (c *Chaoxing) GeneralSign(ctx context.Context, act models.ActivityType, use
 			"longitude": "-1",
 			"appType":   "15",
 			"fid":       cookieData.Fid,
+			"name":      username,
+		}).
+		Get(globals.PPT_SIGN_URL)
+
+	if r.StatusCode() == 302 {
+		log.Println("[通用] 签到失败，可能是 Cookie 过期")
+		return false
+	} else if err != nil {
+		log.Printf("[通用] 签到失败: %v\n", err)
+		return false
+	}
+
+	if r.String() == "success" {
+		log.Println("[通用] 签到成功")
+	} else {
+		log.Printf("[通用] 签到失败: %s\n", r.String())
+		return false
+	}
+
+	return true
+}
+
+func (c *Chaoxing) CodeSign(ctx context.Context, act models.ActivityType, signCode, username string) bool {
+	cookieData, err := c.GetCookies(ctx, username)
+	if err != nil {
+		log.Printf("[通用] 获取 Cookie 失败: %v\n", err)
+		return false
+	}
+
+	cookies := cookieData.ToCookies()
+	r, err := c.Rty.R().
+		SetCookies(cookies).
+		SetQueryParams(map[string]string{
+			"activeId":  act.ActivityID,
+			"uid":       cookieData.Uid,
+			"latitude":  "-1",
+			"longitude": "-1",
+			"appType":   "15",
+			"fid":       cookieData.Fid,
+			"signCode":  signCode,
 			"name":      username,
 		}).
 		Get(globals.PPT_SIGN_URL)
