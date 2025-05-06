@@ -15,15 +15,15 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password string) (models.UserCookieType, error) {
+func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password string) (models.ChaoxingCookieType, error) {
 	encryptedPassword, err := utils.EncryptByAES(password, globals.Secret)
 	if err != nil {
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
 	encryptedUsername, err := utils.EncryptByAES(username, globals.Secret)
 	if err != nil {
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
 	formData := map[string]string{
@@ -43,31 +43,31 @@ func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password st
 		Post(globals.LOGIN_URL)
 
 	if err != nil {
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
 	// 解析 JSON 响应
 	var result map[string]any
 	err = json.Unmarshal(r.Body(), &result)
 	if err != nil {
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
 	// 检查登录状态
 	status, ok := result["status"].(bool)
 	if !ok || !status {
 		log.Println("登陆失败")
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
 	// 获取 Set-Cookie
 	cookies := r.Cookies()
 	if len(cookies) == 0 {
 		log.Println("网络异常，未获取到 Cookie")
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
-	cookie := models.UserCookieType{
+	cookie := models.ChaoxingCookieType{
 		Fid: "-1",
 		// Pid:   "-1",
 		// Refer: "https://i.chaoxing.com",
@@ -85,19 +85,19 @@ func (c *Chaoxing) LoginByPass(ctx context.Context, username string, password st
 	err = mergo.Merge(&cookie, userCookie)
 	if err != nil {
 		log.Printf("合并失败: %v\n", err)
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 
 	err = c.StoreCookies(ctx, username, cookie)
 	if err != nil {
 		log.Printf("存储 Cookie 失败: %v\n", err)
-		return models.UserCookieType{}, err
+		return models.ChaoxingCookieType{}, err
 	}
 	// log.Printf("登录成功: %v\n", cookie)
 	return cookie, nil
 }
 
-func (c *Chaoxing) StoreCookies(ctx context.Context, key string, cookie models.UserCookieType) error {
+func (c *Chaoxing) StoreCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error {
 	cookieJSON, err := json.Marshal(cookie)
 	if err != nil {
 		log.Printf("数据转换失败: %v\n", err)
@@ -112,7 +112,7 @@ func (c *Chaoxing) StoreCookies(ctx context.Context, key string, cookie models.U
 	return nil
 }
 
-func (c *Chaoxing) GetCookies(ctx context.Context, key string) (*models.UserCookieType, error) {
+func (c *Chaoxing) GetCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error) {
 	val, err := c.Rdb.Get(ctx, "cookie:"+key).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -123,7 +123,7 @@ func (c *Chaoxing) GetCookies(ctx context.Context, key string) (*models.UserCook
 		return nil, err
 	}
 
-	var cookie models.UserCookieType
+	var cookie models.ChaoxingCookieType
 	err = json.Unmarshal([]byte(val), &cookie)
 	if err != nil {
 		log.Printf("数据转换失败: %v\n", err)

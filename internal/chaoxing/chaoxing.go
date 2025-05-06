@@ -23,9 +23,9 @@ func NewChaoxing(ctx context.Context, rty *resty.Client, rdb *redis.Client) Chao
 
 type Chaoxings interface {
 	// user
-	GetCookies(ctx context.Context, key string) (*models.UserCookieType, error)
-	StoreCookies(ctx context.Context, key string, cookie models.UserCookieType) error
-	LoginByPass(ctx context.Context, username string, password string) (models.UserCookieType, error)
+	GetCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error)
+	StoreCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error
+	LoginByPass(ctx context.Context, username string, password string) (models.ChaoxingCookieType, error)
 	GetPanToken(ctx context.Context, username string) (string, error)
 	GetCourses(ctx context.Context, username string) ([]models.CourseType, error)
 	GetUserName(ctx context.Context, username string) (string, error)

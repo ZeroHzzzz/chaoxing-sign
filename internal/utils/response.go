@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"chaoxing/internal/pkg/code"
+	"chaoxing/internal/pkg/xerr"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +19,6 @@ func JsonSuccessResponse(c *gin.Context, data interface{}) {
 	JsonResponse(c, http.StatusOK, 200, "OK", data)
 }
 
-func JsonErrorResponse(c *gin.Context, err *code.Error) {
+func JsonErrorResponse(c *gin.Context, err *xerr.Error) {
 	JsonResponse(c, http.StatusOK, err.Code, err.Msg, nil)
 }

@@ -28,9 +28,9 @@ func ParseAnalysis(data string) string {
 	return code
 }
 
-func ParseCookies(cookies []*http.Cookie) models.UserCookieType {
+func ParseCookies(cookies []*http.Cookie) models.ChaoxingCookieType {
 	// Reflection
-	var cookie models.UserCookieType
+	var cookie models.ChaoxingCookieType
 	val := reflect.ValueOf(&cookie).Elem()
 	typ := val.Type()
 
