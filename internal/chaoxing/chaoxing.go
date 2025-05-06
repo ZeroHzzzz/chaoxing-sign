@@ -14,11 +14,10 @@ type Chaoxing struct {
 }
 
 func NewChaoxing(ctx context.Context, rty *resty.Client, rdb *redis.Client) Chaoxings {
-	chao := &Chaoxing{
+	return &Chaoxing{
 		Rty: rty,
 		Rdb: rdb,
 	}
-	return chao
 }
 
 type Chaoxings interface {

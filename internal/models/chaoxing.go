@@ -2,6 +2,12 @@ package models
 
 import "net/http"
 
+type ChaoxingUser struct {
+	Phone string `json:"phone"`
+	Pass  string `json:"pass"`
+	Name  string `json:"name"`
+}
+
 type IMParamsType struct {
 	MyName  string `json:"myName"`
 	MyToken string `json:"myToken"`
