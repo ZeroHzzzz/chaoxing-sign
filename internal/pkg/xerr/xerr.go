@@ -15,6 +15,9 @@ var (
 
 	HttpErr   = NewError(http.StatusBadRequest, 200500, "请求失败")
 	ServerErr = NewError(http.StatusInternalServerError, 200500, "服务器错误")
+
+	PoolClosedErr = NewError(http.StatusBadRequest, 200500, "线程池已关闭")
+	PoolFullErr   = NewError(http.StatusBadRequest, 200500, "线程池已满")
 )
 
 func OtherError(message string) *Error {

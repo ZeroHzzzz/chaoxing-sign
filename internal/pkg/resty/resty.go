@@ -1,7 +1,9 @@
 package resty
 
 import (
+	"net/http"
 	"sync"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -13,6 +15,13 @@ var (
 
 func initRty() {
 	client = resty.New().
+		SetTransport(&http.Transport{
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 10,
+			IdleConnTimeout:     90 * time.Second,
+		}).
+		// 设置连接超时
+		SetTimeout(10 * time.Second).
 		// SetRedirectPolicy(resty.NoRedirectPolicy()).
 		SetCookieJar(nil)
 }
