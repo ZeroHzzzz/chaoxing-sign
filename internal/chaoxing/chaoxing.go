@@ -11,7 +11,7 @@ type Chaoxing struct {
 	Rty *resty.Client
 }
 
-func NewChaoxing(rty *resty.Client, cookie *models.ChaoxingCookieType) Chaoxings {
+func NewChaoxing(rty *resty.Client) Chaoxings {
 	return &Chaoxing{
 		Rty: rty,
 	}
