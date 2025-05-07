@@ -26,4 +26,11 @@ type Daos interface {
 
 	NewUserSignConfig(ctx context.Context, phone string, config models.SignConfigType) error
 	GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error)
+
+	NewUser(ctx context.Context, user *models.User) error
+	GetUserByID(ctx context.Context, ID int) (*models.User, error)
+	GetUserByIDPass(ctx context.Context, ID int, pass string) (*models.User, error)
+	UpdateUser(ctx context.Context, user *models.User) error
+	DelUser(ctx context.Context, ID int, pass string) error
+	DelUserByID(ctx context.Context, ID int) error
 }

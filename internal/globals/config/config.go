@@ -1,4 +1,4 @@
-package globals
+package config
 
 import (
 	"log"

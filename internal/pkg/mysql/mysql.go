@@ -1,67 +1,35 @@
 package mysql
 
 import (
-	"chaoxing/internal/globals"
-	"chaoxing/internal/models"
 	"fmt"
-	"log"
-	"time"
 
+	"chaoxing/internal/globals/config"
+
+	"go.uber.org/zap"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
-var DB *gorm.DB
+func Init() *gorm.DB {
+	user := config.Config.GetString("mysql.user")
+	pass := config.Config.GetString("mysql.pass")
+	port := config.Config.GetString("mysql.port")
+	host := config.Config.GetString("mysql.host")
+	name := config.Config.GetString("mysql.name")
 
-// InitMySQL 初始化MySQL连接
-func InitMySQL() {
-	var err error
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Local",
-		globals.Config.GetString("mysql.username"),
-		globals.Config.GetString("mysql.password"),
-		globals.Config.GetString("mysql.host"),
-		globals.Config.GetInt("mysql.port"),
-		globals.Config.GetString("mysql.database"),
-		globals.Config.GetString("mysql.charset"),
-	)
-
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=utf8&parseTime=True&loc=Local", user, pass, host, port, name)
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true, // 关闭外键约束 提升数据库速度
 	})
 
 	if err != nil {
-		log.Fatalf("MySQL连接失败: %v", err)
+		zap.L().Fatal("Failed to connect to MySQL:" + err.Error())
 	}
 
-	sqlDB, err := DB.DB()
+	err = autoMigrate(db)
 	if err != nil {
-		log.Fatalf("获取数据库连接池失败: %v", err)
+		zap.L().Fatal("DatabaseMigrateFailed" + err.Error())
 	}
-
-	// 设置连接池参数
-	sqlDB.SetMaxIdleConns(globals.Config.GetInt("mysql.max_idle_conns"))
-	sqlDB.SetMaxOpenConns(globals.Config.GetInt("mysql.max_open_conns"))
-	sqlDB.SetConnMaxLifetime(time.Hour)
-
-	// 自动迁移数据表结构
-	autoMigrate()
-
-	log.Println("MySQL连接成功")
-}
-
-// autoMigrate 自动迁移数据表结构
-func autoMigrate() {
-	// 在这里添加需要自动迁移的模型
-	err := DB.AutoMigrate(
-		&models.User{},
-		&models.ChaoxingUser{},
-	)
-
-	if err != nil {
-		log.Fatalf("数据表迁移失败: %v", err)
-	}
-
-	log.Println("数据表迁移成功")
+	zap.L().Info("Connected to MySQL")
+	return db
 }

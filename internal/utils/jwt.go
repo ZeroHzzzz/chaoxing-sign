@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"chaoxing/internal/globals"
+	"chaoxing/internal/globals/config"
 	"chaoxing/internal/models"
 	"errors"
 	"time"
@@ -19,8 +19,8 @@ type CustomClaims struct {
 // GenerateToken 生成JWT令牌
 func GenerateToken(user *models.User) (string, error) {
 	// 获取JWT配置
-	secretKey := globals.Config.GetString("jwt.secret_key")
-	expireTime := globals.Config.GetInt("jwt.expire_time")
+	secretKey := config.Config.GetString("jwt.secret_key")
+	expireTime := config.Config.GetInt("jwt.expire_time")
 
 	// 创建自定义声明
 	claims := CustomClaims{
@@ -43,7 +43,7 @@ func GenerateToken(user *models.User) (string, error) {
 // ParseToken 解析JWT令牌
 func ParseToken(tokenString string) (*CustomClaims, error) {
 	// 获取JWT密钥
-	secretKey := globals.Config.GetString("jwt.secret_key")
+	secretKey := config.Config.GetString("jwt.secret_key")
 
 	// 解析令牌
 	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {

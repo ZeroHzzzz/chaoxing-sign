@@ -6,3 +6,9 @@ type User struct {
 	Password         string         `json:"password" gorm:"not null"`
 	ChaoxingAccounts []ChaoxingUser `json:"chaoxing_account"`
 }
+
+type ChaoxingUser struct {
+	Phone string `json:"phone"`
+	Pass  string `json:"pass"`
+	Name  string `json:"name"`
+}
