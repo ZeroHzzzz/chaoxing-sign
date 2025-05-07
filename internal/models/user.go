@@ -8,6 +8,7 @@ type User struct {
 }
 
 type ChaoxingUser struct {
+	ID    int    `json:"id" gorm:"primaryKey"`
 	Phone string `json:"phone"`
 	Pass  string `json:"pass"`
 	Name  string `json:"name"`

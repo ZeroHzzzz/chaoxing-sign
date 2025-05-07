@@ -82,3 +82,32 @@ func (c *Dao) GetUserSignConfig(ctx context.Context, phone string) (*models.Sign
 
 	return &config, nil
 }
+
+func (c *Dao) NewChaoxingUser(ctx context.Context, user *models.ChaoxingUser) error {
+	if err := c.DB.Create(user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Dao) GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingUser, error) {
+	var user models.ChaoxingUser
+	if err := c.DB.Where("phone = ?", phone).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (c *Dao) UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingUser) error {
+	if err := c.DB.Save(user).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Dao) DelChaoxingUser(ctx context.Context, phone string) error {
+	if err := c.DB.Where("phone = ?", phone).Delete(&models.ChaoxingUser{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
