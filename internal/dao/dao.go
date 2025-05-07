@@ -21,9 +21,9 @@ func NewDao(db *gorm.DB, rdb *redis.Client) Daos {
 }
 
 type Daos interface {
-	NewChaoxingUser(ctx context.Context, user *models.ChaoxingUser) error
-	GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingUser, error)
-	UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingUser) error
+	NewChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error
+	GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingAccount, error)
+	UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error
 	DelChaoxingUser(ctx context.Context, phone string) error
 
 	GetChaoxingCookies(ctx context.Context, phone string) (*models.ChaoxingCookieType, error)
@@ -34,7 +34,9 @@ type Daos interface {
 
 	NewUser(ctx context.Context, user *models.User) error
 	GetUserByID(ctx context.Context, ID int) (*models.User, error)
+	GetUserOnlyByID(ctx context.Context, ID int) (*models.User, error)
 	GetUserByIDPass(ctx context.Context, ID int, pass string) (*models.User, error)
+	GetUserOnlyByIDPass(ctx context.Context, ID int, pass string) (*models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error
 	DelUser(ctx context.Context, ID int, pass string) error
 	DelUserByID(ctx context.Context, ID int) error

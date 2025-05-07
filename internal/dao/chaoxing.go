@@ -10,14 +10,14 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func (c *Dao) NewChaoxingCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error {
+func (d *Dao) NewChaoxingCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error {
 	cookieJSON, err := json.Marshal(cookie)
 	if err != nil {
 		log.Printf("数据转换失败: %v\n", err)
 		return err
 	}
 
-	err = c.Rdb.Set(ctx, "cookie:"+key, cookieJSON, 2*time.Hour).Err() // 两小时过期
+	err = d.Rdb.Set(ctx, "cookie:"+key, cookieJSON, 2*time.Hour).Err() // 两小时过期
 	if err != nil {
 		return err
 	}
@@ -25,8 +25,8 @@ func (c *Dao) NewChaoxingCookies(ctx context.Context, key string, cookie models.
 	return nil
 }
 
-func (c *Dao) GetChaoxingCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error) {
-	val, err := c.Rdb.Get(ctx, "cookie:"+key).Result()
+func (d *Dao) GetChaoxingCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error) {
+	val, err := d.Rdb.Get(ctx, "cookie:"+key).Result()
 	if err != nil {
 		if err == redis.Nil {
 			// todo: 处理 Cookie 过期的情况
@@ -46,7 +46,7 @@ func (c *Dao) GetChaoxingCookies(ctx context.Context, key string) (*models.Chaox
 	return &cookie, nil
 }
 
-func (c *Dao) NewUserSignConfig(ctx context.Context, phone string, config models.SignConfigType) error {
+func (d *Dao) NewUserSignConfig(ctx context.Context, phone string, config models.SignConfigType) error {
 	// 暂时考虑将用户cookie和签到配置分开存储
 
 	configJSON, err := json.Marshal(config)
@@ -55,15 +55,15 @@ func (c *Dao) NewUserSignConfig(ctx context.Context, phone string, config models
 		return err
 	}
 
-	err = c.Rdb.Set(ctx, "sign_config:"+phone, configJSON, 0).Err()
+	err = d.Rdb.Set(ctx, "sign_config:"+phone, configJSON, 0).Err()
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Dao) GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error) {
-	val, err := c.Rdb.Get(ctx, "sign_config:"+phone).Result()
+func (d *Dao) GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error) {
+	val, err := d.Rdb.Get(ctx, "sign_config:"+phone).Result()
 	if err != nil {
 		if err == redis.Nil {
 			log.Println("签到配置不存在")
@@ -83,30 +83,30 @@ func (c *Dao) GetUserSignConfig(ctx context.Context, phone string) (*models.Sign
 	return &config, nil
 }
 
-func (c *Dao) NewChaoxingUser(ctx context.Context, user *models.ChaoxingUser) error {
-	if err := c.DB.Create(user).Error; err != nil {
+func (d *Dao) NewChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error {
+	if err := d.DB.Create(user).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Dao) GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingUser, error) {
-	var user models.ChaoxingUser
-	if err := c.DB.Where("phone = ?", phone).First(&user).Error; err != nil {
+func (d *Dao) GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingAccount, error) {
+	var user models.ChaoxingAccount
+	if err := d.DB.Where("phone = ?", phone).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (c *Dao) UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingUser) error {
-	if err := c.DB.Save(user).Error; err != nil {
+func (d *Dao) UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error {
+	if err := d.DB.Save(user).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Dao) DelChaoxingUser(ctx context.Context, phone string) error {
-	if err := c.DB.Where("phone = ?", phone).Delete(&models.ChaoxingUser{}).Error; err != nil {
+func (d *Dao) DelChaoxingUser(ctx context.Context, phone string) error {
+	if err := d.DB.Where("phone = ?", phone).Delete(&models.ChaoxingAccount{}).Error; err != nil {
 		return err
 	}
 	return nil
