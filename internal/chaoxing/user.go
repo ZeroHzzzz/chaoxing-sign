@@ -13,10 +13,6 @@ import (
 	"dario.cat/mergo"
 )
 
-func (c *Chaoxing) UpdateCookie(cookie models.ChaoxingCookieType) {
-	c.Cookie = &cookie
-}
-
 func (c *Chaoxing) LoginByPass(ctx context.Context, phone string, password string) (models.ChaoxingCookieType, error) {
 	encryptedPassword, err := utils.EncryptByAES(password, globals.Secret)
 	if err != nil {
@@ -99,10 +95,9 @@ func (c *Chaoxing) LoginByPass(ctx context.Context, phone string, password strin
 	return cookie, nil
 }
 
-func (c *Chaoxing) GetPanToken(ctx context.Context) (string, error) {
-	cookies := c.Cookie.ToCookies()
+func (c *Chaoxing) GetPanToken(ctx context.Context, cookie models.ChaoxingCookieType) (string, error) {
 	r, err := c.Rty.R().
-		SetCookies(cookies).
+		SetCookies(cookie.ToCookies()).
 		Get(globals.GET_PANTOKEN_URL)
 
 	if err != nil {
@@ -126,8 +121,8 @@ func (c *Chaoxing) GetPanToken(ctx context.Context) (string, error) {
 	return token, nil
 }
 
-func (c *Chaoxing) GetCourses(ctx context.Context) ([]models.CourseType, error) {
-
+func (c *Chaoxing) GetCourses(ctx context.Context, cookie models.ChaoxingCookieType) ([]models.CourseType, error) {
+	// 注意这里传入的是models.ChaoxingCookieType类型的cookie
 	formData := map[string]string{
 		"courseType":       "1",
 		"courseFolderId":   "0",
@@ -140,7 +135,7 @@ func (c *Chaoxing) GetCourses(ctx context.Context) ([]models.CourseType, error) 
 			"Accept-Encoding": "gzip, deflate",
 			"Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
 			"Content-Type":    "application/x-www-form-urlencoded; charset=UTF-8",
-			"Cookie":          fmt.Sprintf("_uid=%s; _d=%s; vc3=%s", c.Cookie.Uid, c.Cookie.D, c.Cookie.Vc3),
+			"Cookie":          fmt.Sprintf("_uid=%s; _d=%s; vc3=%s", cookie.Uid, cookie.D, cookie.Vc3),
 		}). // 这里cookie格式特殊，因此使用了SetHeaders直接拼接
 		SetFormData(formData).
 		Post(globals.GET_COURSELIST_URL)
@@ -164,10 +159,9 @@ func (c *Chaoxing) GetCourses(ctx context.Context) ([]models.CourseType, error) 
 	return courses, nil
 }
 
-func (c *Chaoxing) GetUserName(ctx context.Context) (string, error) {
-	cookies := c.Cookie.ToCookies()
+func (c *Chaoxing) GetUserName(ctx context.Context, cookie models.ChaoxingCookieType) (string, error) {
 	r, err := c.Rty.R().
-		SetCookies(cookies).
+		SetCookies(cookie.ToCookies()).
 		Get(globals.GET_USER_INFO_URL)
 	if r.StatusCode() == 302 {
 		log.Println("获取用户信息失败，可能是 Cookie 过期")
@@ -183,8 +177,8 @@ func (c *Chaoxing) GetUserName(ctx context.Context) (string, error) {
 }
 
 // 获取IM参数（登录用）
-func (c *Chaoxing) GetIMParams(ctx context.Context) (*models.IMParamsType, error) {
-	cookies := c.Cookie.ToCookies()
+func (c *Chaoxing) GetIMParams(ctx context.Context, cookie models.ChaoxingCookieType) (*models.IMParamsType, error) {
+	cookies := cookie.ToCookies()
 	r, err := c.Rty.R().
 		SetCookies(cookies).
 		Get(globals.GET_WEBIM_URL)
@@ -201,6 +195,6 @@ func (c *Chaoxing) GetIMParams(ctx context.Context) (*models.IMParamsType, error
 
 	imParams := utils.ParseIMParams(data)
 	// Puid为uid
-	imParams.MyPuid = c.Cookie.Uid
+	imParams.MyPuid = cookie.Uid
 	return &imParams, nil
 }

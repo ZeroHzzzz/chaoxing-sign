@@ -21,8 +21,8 @@ func NewDao(db *gorm.DB, rdb *redis.Client) Daos {
 }
 
 type Daos interface {
-	GetChaoxingCookies(ctx context.Context, key string) (*models.ChaoxingCookieType, error)
-	NewChaoxingCookies(ctx context.Context, key string, cookie models.ChaoxingCookieType) error
+	GetChaoxingCookies(ctx context.Context, phone string) (*models.ChaoxingCookieType, error)
+	NewChaoxingCookies(ctx context.Context, phone string, cookie models.ChaoxingCookieType) error
 
 	NewUserSignConfig(ctx context.Context, phone string, config models.SignConfigType) error
 	GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error)
