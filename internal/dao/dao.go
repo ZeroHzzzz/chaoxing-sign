@@ -40,4 +40,11 @@ type Daos interface {
 	UpdateUser(ctx context.Context, user *models.User) error
 	DelUser(ctx context.Context, ID int, pass string) error
 	DelUserByID(ctx context.Context, ID int) error
+
+	// 超星账号相关接口
+	AddChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
+	GetChaoxingAccountsByUserID(ctx context.Context, userID int) ([]models.ChaoxingAccount, error)
+	UpdateChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
+	DelChaoxingAccount(ctx context.Context, phone string) error
+	DelChaoxingAccountByID(ctx context.Context, id int) error
 }

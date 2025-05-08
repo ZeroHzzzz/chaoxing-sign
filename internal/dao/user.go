@@ -52,17 +52,39 @@ func (d *Dao) UpdateUser(ctx context.Context, user *models.User) error {
 }
 
 func (d *Dao) DelUser(ctx context.Context, ID int, pass string) error {
-	var user models.User
-	if err := d.DB.Where("id = ? AND password = ?", ID, pass).Delete(&user).Error; err != nil {
-		return err
-	}
-	return nil
+	return d.DB.Transaction(func(tx *gorm.DB) error {
+		// 先查找用户
+		var user models.User
+		if err := tx.Where("id = ? AND password = ?", ID, pass).First(&user).Error; err != nil {
+			return err
+		}
+		// 删除关联的超星账号
+		if err := tx.Where("user_id = ?", ID).Delete(&models.ChaoxingAccount{}).Error; err != nil {
+			return err
+		}
+		// 删除用户
+		if err := tx.Delete(&user).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (d *Dao) DelUserByID(ctx context.Context, ID int) error {
-	var user models.User
-	if err := d.DB.Delete(&user, ID).Error; err != nil {
-		return err
-	}
-	return nil
+	return d.DB.Transaction(func(tx *gorm.DB) error {
+		// 先查找用户
+		var user models.User
+		if err := tx.First(&user, ID).Error; err != nil {
+			return err
+		}
+		// 删除关联的超星账号
+		if err := tx.Where("user_id = ?", ID).Delete(&models.ChaoxingAccount{}).Error; err != nil {
+			return err
+		}
+		// 删除用户
+		if err := tx.Delete(&user).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }

@@ -83,13 +83,6 @@ func (d *Dao) GetUserSignConfig(ctx context.Context, phone string) (*models.Sign
 	return &config, nil
 }
 
-func (d *Dao) NewChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error {
-	if err := d.DB.Create(user).Error; err != nil {
-		return err
-	}
-	return nil
-}
-
 func (d *Dao) GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingAccount, error) {
 	var user models.ChaoxingAccount
 	if err := d.DB.Where("phone = ?", phone).First(&user).Error; err != nil {
@@ -98,15 +91,37 @@ func (d *Dao) GetChaoxingUserByPhone(ctx context.Context, phone string) (*models
 	return &user, nil
 }
 
-func (d *Dao) UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error {
+func (d *Dao) UpdateChaoxingAccount(ctx context.Context, user *models.ChaoxingAccount) error {
 	if err := d.DB.Save(user).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (d *Dao) DelChaoxingUser(ctx context.Context, phone string) error {
+func (d *Dao) DelChaoxingAccount(ctx context.Context, phone string) error {
 	if err := d.DB.Where("phone = ?", phone).Delete(&models.ChaoxingAccount{}).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Dao) AddChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error {
+	if err := d.DB.Create(account).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Dao) GetChaoxingAccountsByUserID(ctx context.Context, userID int) ([]models.ChaoxingAccount, error) {
+	var accounts []models.ChaoxingAccount
+	if err := d.DB.Where("user_id = ?", userID).Find(&accounts).Error; err != nil {
+		return nil, err
+	}
+	return accounts, nil
+}
+
+func (d *Dao) DelChaoxingAccountByID(ctx context.Context, id int) error {
+	if err := d.DB.Delete(&models.ChaoxingAccount{}, id).Error; err != nil {
 		return err
 	}
 	return nil
