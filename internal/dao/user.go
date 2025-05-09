@@ -72,6 +72,30 @@ func (d *Dao) GetUserByIDPass(ctx context.Context, ID int, pass string) (*models
 	return &user, nil
 }
 
+func (d *Dao) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	err := d.DB.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (d *Dao) GetUserByEmailPass(ctx context.Context, email, pass string) (*models.User, error) {
+	var user models.User
+	err := d.DB.Where("email = ? AND password = ?", email, pass).First(&user).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (d *Dao) UpdateUser(ctx context.Context, user *models.User) error {
 	return d.DB.Model(user).Updates(user).Error
 }

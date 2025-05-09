@@ -3,7 +3,6 @@ package services
 import (
 	"chaoxing/internal/chaoxing"
 	"chaoxing/internal/dao"
-	"context"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/redis/go-redis/v9"
@@ -11,9 +10,8 @@ import (
 )
 
 var (
-	ctx = context.Background()
-	d   dao.Daos
-	c   chaoxing.Chaoxings
+	d dao.Daos
+	c chaoxing.Chaoxings
 )
 
 // Init 函数用于初始化服务。

@@ -11,6 +11,7 @@ require (
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/spf13/viper v1.20.1
 	go.uber.org/zap v1.27.0
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.26.0
 )

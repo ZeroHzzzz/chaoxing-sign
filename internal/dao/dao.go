@@ -31,6 +31,8 @@ type Daos interface {
 	GetUsersByUsername(ctx context.Context, username string, page, pageSize int) ([]*models.User, int64, error)
 	GetUserByID(ctx context.Context, id int) (*models.User, error)
 	GetUserByIDPass(ctx context.Context, ID int, password string) (*models.User, error)
+	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
+	GetUserByEmailPass(ctx context.Context, email, password string) (*models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error
 	DeleteUser(ctx context.Context, id int) error
 	DeleteUserByPass(ctx context.Context, ID int, password string) error

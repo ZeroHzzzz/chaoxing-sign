@@ -1,37 +1,57 @@
 package xerr
 
-import "net/http"
+import (
+	"chaoxing/internal/pkg/log"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+)
 
 type Error struct {
-	StatusCode int    `json:"-"`
-	Code       int    `json:"code"`
-	Msg        string `json:"msg"`
+	Code  int
+	Msg   string
+	Level log.Level
 }
 
 var (
-	NotLoginErr = NewError(http.StatusUnauthorized, 200401, "未登录或登录过期")
-	PreSignErr  = NewError(http.StatusBadRequest, 200400, "预签到失败")
-	SignErr     = NewError(http.StatusBadRequest, 200400, "签到失败")
+	NotLoginErr = NewError(200401, log.LevelInfo, "未登录或登录过期")
+	PreSignErr  = NewError(200400, log.LevelInfo, "预签到失败")
+	SignErr     = NewError(200400, log.LevelInfo, "签到失败")
 
-	HttpErr   = NewError(http.StatusBadRequest, 200500, "请求失败")
-	ServerErr = NewError(http.StatusInternalServerError, 200500, "服务器错误")
+	HttpErr   = NewError(200500, log.LevelInfo, "请求失败")
+	ServerErr = NewError(200500, log.LevelInfo, "服务器错误")
 
-	PoolClosedErr = NewError(http.StatusBadRequest, 200500, "线程池已关闭")
-	PoolFullErr   = NewError(http.StatusBadRequest, 200500, "线程池已满")
+	PoolClosedErr = NewError(200500, log.LevelInfo, "线程池已关闭")
+	PoolFullErr   = NewError(200500, log.LevelInfo, "线程池已满")
 )
-
-func OtherError(message string) *Error {
-	return NewError(http.StatusForbidden, 100403, message)
-}
 
 func (e *Error) Error() string {
 	return e.Msg
 }
 
-func NewError(statusCode, Code int, msg string) *Error {
+func NewError(code int, level log.Level, msg string) *Error {
 	return &Error{
-		StatusCode: statusCode,
-		Code:       Code,
-		Msg:        msg,
+		Code:  code,
+		Msg:   msg,
+		Level: level,
 	}
+}
+
+// AbortWithException 用于返回自定义错误信息
+func AbortWithException(c *gin.Context, apiError *Error, err error) {
+	logError(c, apiError, err)
+	_ = c.AbortWithError(200, apiError) //nolint:errcheck
+}
+
+// logError 记录错误日志
+func logError(c *gin.Context, apiErr *Error, err error) {
+	// 构建日志字段
+	logFields := []zap.Field{
+		zap.Int("error_code", apiErr.Code),
+		zap.String("path", c.Request.URL.Path),
+		zap.String("method", c.Request.Method),
+		zap.String("ip", c.ClientIP()),
+		zap.Error(err), // 记录原始错误信息
+	}
+	log.GetLogFunc(apiErr.Level)(apiErr.Msg, logFields...)
 }
