@@ -21,11 +21,6 @@ func NewDao(db *gorm.DB, rdb *redis.Client) Daos {
 }
 
 type Daos interface {
-	NewChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error
-	GetChaoxingUserByPhone(ctx context.Context, phone string) (*models.ChaoxingAccount, error)
-	UpdateChaoxingUser(ctx context.Context, user *models.ChaoxingAccount) error
-	DelChaoxingUser(ctx context.Context, phone string) error
-
 	GetChaoxingCookies(ctx context.Context, phone string) (*models.ChaoxingCookieType, error)
 	NewChaoxingCookies(ctx context.Context, phone string, cookie models.ChaoxingCookieType) error
 
@@ -33,18 +28,15 @@ type Daos interface {
 	GetUserSignConfig(ctx context.Context, phone string) (*models.SignConfigType, error)
 
 	NewUser(ctx context.Context, user *models.User) error
-	GetUserByID(ctx context.Context, ID int) (*models.User, error)
-	GetUserOnlyByID(ctx context.Context, ID int) (*models.User, error)
-	GetUserByIDPass(ctx context.Context, ID int, pass string) (*models.User, error)
-	GetUserOnlyByIDPass(ctx context.Context, ID int, pass string) (*models.User, error)
+	GetUsersByUsername(ctx context.Context, username string, page, pageSize int) ([]*models.User, int64, error)
+	GetUserByID(ctx context.Context, id int) (*models.User, error)
+	GetUserByIDPass(ctx context.Context, ID int, password string) (*models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error
-	DelUser(ctx context.Context, ID int, pass string) error
-	DelUserByID(ctx context.Context, ID int) error
+	DeleteUser(ctx context.Context, id int) error
+	DeleteUserByPass(ctx context.Context, ID int, password string) error
 
-	// 超星账号相关接口
-	AddChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
-	GetChaoxingAccountsByUserID(ctx context.Context, userID int) ([]models.ChaoxingAccount, error)
+	BindChaoxingAccount(ctx context.Context, userID int, account *models.ChaoxingAccount) error
+	GetUserChaoxingAccount(ctx context.Context, userID int) (*models.ChaoxingAccount, error)
 	UpdateChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
-	DelChaoxingAccount(ctx context.Context, phone string) error
-	DelChaoxingAccountByID(ctx context.Context, id int) error
+	UnbindChaoxingAccount(ctx context.Context, userID int) error
 }

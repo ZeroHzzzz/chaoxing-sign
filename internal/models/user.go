@@ -1,15 +1,15 @@
 package models
 
 type User struct {
-	ID               int               `json:"id" gorm:"primaryKey"`
-	Username         string            `json:"username" gorm:"unique;not null"`
-	Password         string            `json:"password" gorm:"not null"`
-	ChaoxingAccounts []ChaoxingAccount `json:"chaoxing_accounts" gorm:"foreignKey:UserID"`
+	ID              int             `json:"id" gorm:"primaryKey"`
+	Username        string          `json:"username" gorm:"unique;not null"`
+	Password        string          `json:"password" gorm:"not null"`
+	ChaoxingAccount ChaoxingAccount `json:"chaoxing_account" gorm:"foreignKey:UserID"`
 }
 
 type ChaoxingAccount struct {
 	ID        int    `json:"id" gorm:"primaryKey"`
-	UserID    int    `json:"user_id" gorm:"not null"`
+	UserID    int    `json:"user_id" gorm:"not null;unique"`
 	Phone     string `json:"phone" gorm:"not null"`
 	Pass      string `json:"pass" gorm:"not null"`
 	Name      string `json:"name"`
