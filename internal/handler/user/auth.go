@@ -12,7 +12,7 @@ type registerReq struct {
 	Username string `json:"username" binding:"required"`
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
-	Code     string `json:"code" binding:"required"`
+	Code     string `json:"code"`
 }
 
 type sendCodeReq struct {
@@ -52,7 +52,7 @@ func SendVerificationCode(c *gin.Context) {
 }
 
 // Register 注册新用户
-func Register(c *gin.Context) {
+func RegisterByEmail(c *gin.Context) {
 	var req registerReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		xerr.AbortWithException(c, xerr.ParamError, err)
@@ -65,7 +65,28 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	if err := services.Register(c, req.Username, req.Email, req.Password, req.Code); err != nil {
+	if err := services.RegisterByEmail(c, req.Username, req.Email, req.Password, req.Code); err != nil {
+		xerr.AbortWithException(c, xerr.RegisterErr, err)
+		return
+	}
+
+	utils.JsonSuccessResponse(c, nil)
+}
+
+func RegisterTest(c *gin.Context) {
+	var req registerReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		xerr.AbortWithException(c, xerr.ParamError, err)
+		return
+	}
+
+	// 检查邮箱是否已被注册
+	if user, _ := services.GetUserByEmail(c, req.Email); user != nil {
+		xerr.AbortWithException(c, xerr.EmailVerifyErr, nil)
+		return
+	}
+
+	if err := services.RegisterTest(c, req.Username, req.Email, req.Password); err != nil {
 		xerr.AbortWithException(c, xerr.RegisterErr, err)
 		return
 	}

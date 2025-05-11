@@ -1,5 +1,13 @@
 package main
 
+import (
+	"chaoxing/internal/pkg/mysql"
+	"chaoxing/internal/pkg/redis"
+	"chaoxing/internal/pkg/resty"
+	"chaoxing/internal/router"
+	"chaoxing/internal/services"
+)
+
 // var ctx = context.Background()
 // var uname = "19033952880"
 
@@ -104,5 +112,10 @@ func main() {
 	// if err != nil {
 	// 	fmt.Println(err)
 	// }
-
+	db := mysql.Init()
+	rdb := redis.GetRdb()
+	rty := resty.GetRty()
+	services.Init(db, rdb, rty)
+	r := router.InitRouter()
+	r.Run(":8080")
 }

@@ -9,13 +9,15 @@ import (
 
 func InitRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(middleware.ErrHandler())
 
 	// 用户相关路由
 	userGroup := r.Group("/user")
 	{
 		// 无需认证的接口
 		userGroup.POST("/send-code", user.SendVerificationCode) // 发送验证码
-		userGroup.POST("/register", user.Register)              // 注册
+		userGroup.POST("/register/email", user.RegisterByEmail) // 注册
+		userGroup.POST("/register/test", user.RegisterTest)     // 注册测试
 		userGroup.POST("/login/id", user.LoginByID)             // ID登录
 		userGroup.POST("/login/email", user.LoginByEmail)       // 邮箱登录
 		userGroup.GET("/info/:id", user.GetUserInfo)            // 获取用户信息

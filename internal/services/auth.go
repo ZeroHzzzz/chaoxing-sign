@@ -20,7 +20,7 @@ func SendVerificationCode(ctx context.Context, emailAddr string) error {
 	return email.SendVerificationCode(emailAddr, code)
 }
 
-func Register(ctx context.Context, username, email, password, code string) error {
+func RegisterByEmail(ctx context.Context, username, email, password, code string) error {
 	// 验证邮箱验证码
 	storedCode, err := d.GetVerificationCode(ctx, email)
 	if err != nil {
@@ -31,6 +31,17 @@ func Register(ctx context.Context, username, email, password, code string) error
 		return xerr.EmailVerifyErr
 	}
 
+	// 创建新用户
+	user := &models.User{
+		Username: username,
+		Email:    email,
+		Password: password,
+	}
+
+	return d.NewUser(ctx, user)
+}
+
+func RegisterTest(ctx context.Context, username, email, password string) error {
 	// 创建新用户
 	user := &models.User{
 		Username: username,
