@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"chaoxing/internal/utils"
+	"chaoxing/internal/pkg/utils"
 	"net/http"
 	"strings"
 

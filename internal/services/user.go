@@ -2,10 +2,8 @@ package services
 
 import (
 	"chaoxing/internal/models"
-	"chaoxing/internal/pkg/xerr"
-	"chaoxing/internal/utils"
+	"chaoxing/internal/pkg/utils"
 	"context"
-	"errors"
 )
 
 func Register(ctx context.Context, username, password string) error {
@@ -75,13 +73,6 @@ func GetUserByEmailPass(ctx context.Context, email, password string) (*models.Us
 }
 
 func DeleteUserByPass(ctx context.Context, ID int, password string) error {
-	// 获取用户信息
-	_, err := d.GetUserByIDPass(ctx, ID, password)
-	if err != nil {
-		return err
-	}
-
-	// 删除用户
 	return d.DeleteUserByPass(ctx, ID, password)
 }
 
@@ -150,21 +141,21 @@ func UnbindChaoxingAccount(ctx context.Context, userID int) error {
 }
 
 // ValidateUser 验证用户token并获取用户信息
-func ValidateUser(ctx context.Context, token string) (*models.User, error) {
-	// 解析token
-	claims, err := utils.ParseToken(token)
-	if err != nil {
-		return nil, xerr.NotLoginErr
-	}
+// func ValidateUser(ctx context.Context, token string) (*models.User, error) {
+// 	// 解析token
+// 	claims, err := utils.ParseToken(token)
+// 	if err != nil {
+// 		return nil, xerr.NotLoginErr
+// 	}
 
-	// 获取用户信息
-	user, err := d.GetUserByID(ctx, claims.ID)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, errors.New("用户不存在")
-	}
+// 	// 获取用户信息
+// 	user, err := d.GetUserByID(ctx, claims.ID)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	if user == nil {
+// 		return nil, errors.New("用户不存在")
+// 	}
 
-	return user, nil
-}
+// 	return user, nil
+// }

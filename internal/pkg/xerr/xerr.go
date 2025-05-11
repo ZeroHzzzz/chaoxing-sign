@@ -2,6 +2,7 @@ package xerr
 
 import (
 	"chaoxing/internal/pkg/log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -23,6 +24,14 @@ var (
 
 	PoolClosedErr = NewError(200500, log.LevelInfo, "线程池已关闭")
 	PoolFullErr   = NewError(200500, log.LevelInfo, "线程池已满")
+
+	ParamError         = NewError(200501, log.LevelInfo, "参数错误")
+	UserNotFind        = NewError(200502, log.LevelInfo, "该用户不存在")
+	RegisterErr        = NewError(200502, log.LevelInfo, "注册失败")
+	DeleteUserErr      = NewError(200502, log.LevelInfo, "删除用户失败")
+	NotLogin           = NewError(200503, log.LevelInfo, "未登录")
+	ChaoxingOperateErr = NewError(200503, log.LevelInfo, "超星账号操作失败")
+	NotFound           = NewError(200404, log.LevelInfo, http.StatusText(http.StatusNotFound))
 )
 
 func (e *Error) Error() string {
