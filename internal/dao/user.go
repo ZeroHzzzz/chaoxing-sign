@@ -4,9 +4,28 @@ import (
 	"chaoxing/internal/models"
 	"context"
 	"errors"
+	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
+
+// StoreVerificationCode 存储邮箱验证码到Redis
+func (d *Dao) StoreVerificationCode(ctx context.Context, email, code string, expiration time.Duration) error {
+	return d.Rdb.Set(ctx, "verification_code:"+email, code, expiration).Err()
+}
+
+// GetVerificationCode 从Redis获取邮箱验证码
+func (d *Dao) GetVerificationCode(ctx context.Context, email string) (string, error) {
+	code, err := d.Rdb.Get(ctx, "verification_code:"+email).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return "", errors.New("验证码不存在或已过期")
+		}
+		return "", err
+	}
+	return code, nil
+}
 
 func (d *Dao) NewUser(ctx context.Context, user *models.User) error {
 	return d.DB.Create(user).Error

@@ -15,6 +15,13 @@ mysql:
     max_idle_conns: 10
     max_open_conns: 100
 
+email:
+    host: "smtp.example.com" # 邮件服务器地址
+    port: 465 # SMTP端口
+    username: "your-email@example.com" # 邮箱账号
+    password: "your-password" # 邮箱密码或授权码
+    from: "Your Name <your-email@example.com>" # 发件人
+
 jwt:
     secret_key: "chaoxing_secret_key"
     expire_time: 24 # 过期时间(小时)

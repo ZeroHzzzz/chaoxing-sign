@@ -29,6 +29,7 @@ var (
 	UserNotFind        = NewError(200502, log.LevelInfo, "该用户不存在")
 	RegisterErr        = NewError(200502, log.LevelInfo, "注册失败")
 	DeleteUserErr      = NewError(200502, log.LevelInfo, "删除用户失败")
+	EmailVerifyErr     = NewError(200502, log.LevelInfo, "邮箱认证失败")
 	NotLogin           = NewError(200503, log.LevelInfo, "未登录")
 	ChaoxingOperateErr = NewError(200503, log.LevelInfo, "超星账号操作失败")
 	NotFound           = NewError(200404, log.LevelInfo, http.StatusText(http.StatusNotFound))

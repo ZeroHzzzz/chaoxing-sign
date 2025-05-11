@@ -9,59 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type registerReq struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type loginReq struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 type bindChaoxingReq struct {
 	Phone    string `json:"phone" binding:"required"`
 	Password string `json:"password" binding:"required"`
-}
-
-func Register(c *gin.Context) {
-	var req registerReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		xerr.AbortWithException(c, xerr.ParamError, err)
-		return
-	}
-
-	if err := services.Register(c, req.Username, req.Password); err != nil {
-		xerr.AbortWithException(c, xerr.RegisterErr, err)
-		return
-	}
-
-	utils.JsonSuccessResponse(c, nil)
-}
-
-func Login(c *gin.Context) {
-	var req loginReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		xerr.AbortWithException(c, xerr.ParamError, err)
-		return
-	}
-
-	user, err := services.GetUserByEmailPass(c, req.Email, req.Password)
-	if err != nil {
-		xerr.AbortWithException(c, xerr.UserNotFind, err)
-		return
-	}
-
-	token, err := services.Login(c, user.ID, req.Password)
-	if err != nil {
-		xerr.AbortWithException(c, xerr.NotLogin, err)
-		return
-	}
-
-	utils.JsonSuccessResponse(c, gin.H{
-		"token": token,
-		"user":  user,
-	})
 }
 
 func GetUserInfo(c *gin.Context) {

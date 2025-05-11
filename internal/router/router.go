@@ -14,11 +14,13 @@ func InitRouter() *gin.Engine {
 	userGroup := r.Group("/user")
 	{
 		// 无需认证的接口
-		userGroup.POST("/register", user.Register)
-		userGroup.POST("/login", user.Login)
-		userGroup.GET("/info/:id", user.GetUserInfo)
-		userGroup.GET("/list", user.GetUserList)
-		userGroup.DELETE("/:id", user.DeleteUser)
+		userGroup.POST("/send-code", user.SendVerificationCode) // 发送验证码
+		userGroup.POST("/register", user.Register)              // 注册
+		userGroup.POST("/login/id", user.LoginByID)             // ID登录
+		userGroup.POST("/login/email", user.LoginByEmail)       // 邮箱登录
+		userGroup.GET("/info/:id", user.GetUserInfo)            // 获取用户信息
+		userGroup.GET("/list", user.GetUserList)                // 获取用户列表
+		userGroup.DELETE("/:id", user.DeleteUser)               // 删除用户
 
 		// 需要认证的接口
 		auth := userGroup.Group("/", middleware.JWTAuth())

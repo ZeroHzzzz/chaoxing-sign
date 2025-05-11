@@ -2,45 +2,8 @@ package services
 
 import (
 	"chaoxing/internal/models"
-	"chaoxing/internal/pkg/utils"
 	"context"
 )
-
-func Register(ctx context.Context, username, password string) error {
-	// 创建新用户
-	user := &models.User{
-		Username: username,
-		Password: password, // 实际应用中应该对密码进行加密
-	}
-
-	return d.NewUser(ctx, user)
-}
-
-func Login(ctx context.Context, ID int, password string) (string, error) {
-	// 获取用户信息
-	user, err := d.GetUserByIDPass(ctx, ID, password)
-	if err != nil {
-		return "", err
-	}
-
-	// 生成JWT token
-	token, err := utils.GenerateToken(user)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
-func GetUserByID(ctx context.Context, ID int) (*models.User, error) {
-	// 获取用户信息
-	user, err := d.GetUserByID(ctx, ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
 
 func GetUsersByUsername(ctx context.Context, username string, page, pageSize int) ([]*models.User, int64, error) {
 	// 获取用户列表
