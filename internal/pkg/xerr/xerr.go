@@ -33,6 +33,8 @@ var (
 	NotLogin           = NewError(200503, log.LevelInfo, "未登录")
 	ChaoxingOperateErr = NewError(200503, log.LevelInfo, "超星账号操作失败")
 	NotFound           = NewError(200404, log.LevelInfo, http.StatusText(http.StatusNotFound))
+
+	PremissionDenied = NewError(200403, log.LevelInfo, "无权限")
 )
 
 func (e *Error) Error() string {

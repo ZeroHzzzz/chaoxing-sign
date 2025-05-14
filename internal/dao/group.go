@@ -9,13 +9,22 @@ func (d *Dao) NewGroup(ctx context.Context, group *models.Group) error {
 	return d.DB.Create(group).Error
 }
 
-func (d *Dao) GetGroupByID(ctx context.Context, id int) (*models.Group, error) {
+func (d *Dao) GetGroupByGroupID(ctx context.Context, id int) (*models.Group, error) {
 	var group models.Group
 	err := d.DB.Where("id = ?", id).First(&group).Error
 	if err != nil {
 		return nil, err
 	}
 	return &group, nil
+}
+
+func (d *Dao) GetGroupByCaptainID(ctx context.Context, captainID int) ([]*models.Group, error) {
+	var groups []*models.Group
+	err := d.DB.Where("captain_id = ?", captainID).Find(&groups).Error
+	if err != nil {
+		return nil, err
+	}
+	return groups, nil
 }
 
 func (d *Dao) UpdateGroup(ctx context.Context, group *models.Group) error {

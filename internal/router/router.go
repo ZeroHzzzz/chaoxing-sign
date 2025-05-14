@@ -32,6 +32,20 @@ func InitRouter() *gin.Engine {
 			auth.GET("/chaoxing/info", user.GetChaoxingAccount)
 			auth.PUT("/chaoxing/update", user.UpdateChaoxingAccount)
 			auth.DELETE("/chaoxing/unbind", user.UnbindChaoxingAccount)
+
+			// 分组相关
+			groupGroup := auth.Group("/group")
+			{
+				groupGroup.POST("", user.CreateGroup)                               // 创建分组
+				groupGroup.GET("/my", user.GetMyGroups)                             // 获取我的分组列表
+				groupGroup.GET("/:id", user.GetGroupInfo)                           // 获取分组信息
+				groupGroup.PUT("/:id", user.UpdateGroup)                            // 更新分组信息
+				groupGroup.DELETE("/:id", user.DeleteGroup)                         // 删除分组
+				groupGroup.POST("/:id/member", user.AddGroupMember)                 // 添加分组成员
+				groupGroup.DELETE("/:id/member/:member_id", user.RemoveGroupMember) // 移除分组成员
+				groupGroup.GET("/:id/members", user.GetGroupMembers)                // 获取分组成员列表
+				groupGroup.POST("/:id/transfer", user.TransferCaptain)              // 转移组长
+			}
 		}
 	}
 

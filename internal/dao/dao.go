@@ -53,7 +53,8 @@ type Daos interface {
 
 	// Group
 	NewGroup(ctx context.Context, group *models.Group) error
-	GetGroupByID(ctx context.Context, id int) (*models.Group, error)
+	GetGroupByGroupID(ctx context.Context, id int) (*models.Group, error)
+	GetGroupByCaptainID(ctx context.Context, captainID int) ([]*models.Group, error)
 	UpdateGroup(ctx context.Context, group *models.Group) error
 	DeleteGroup(ctx context.Context, id int) error
 	GetGroupsByUserID(ctx context.Context, userID int) ([]*models.Group, error)
