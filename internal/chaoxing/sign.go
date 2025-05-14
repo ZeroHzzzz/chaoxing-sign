@@ -419,3 +419,19 @@ func (c *Chaoxing) GetPPTActivityInfo(ctx context.Context, cookie models.Chaoxin
 	activity.IfPhoto = resp.Data.Ifphoto
 	return nil
 }
+
+func (c *Chaoxing) ScanQrcodeSign(ctx context.Context, cookie models.ChaoxingCookieType, url string) bool {
+	r, err := c.Rty.R().
+		SetCookies(cookie.ToCookies()).
+		SetHeader("User-Agent", globals.UserAgent).
+		Get(url)
+	if r.StatusCode() != 302 {
+		return false
+	}
+	if err != nil {
+		log.Printf("[ScanQrcodeSign] 签到失败: %v\n", err)
+		return false
+	}
+
+	return true
+}

@@ -41,4 +41,5 @@ type Chaoxings interface {
 	CodeSign(ctx context.Context, cookie models.ChaoxingCookieType, act models.ActivityType, signCode, phone string) bool
 	QrcodeSign(ctx context.Context, cookie models.ChaoxingCookieType, location models.LocationType, enc, name, activeId string) bool
 	LocationSign(ctx context.Context, cookie models.ChaoxingCookieType, location models.LocationType, name, activeId string) bool
+	ScanQrcodeSign(ctx context.Context, cookie models.ChaoxingCookieType, url string) bool
 }
