@@ -50,4 +50,18 @@ type Daos interface {
 	GetUserChaoxingAccount(ctx context.Context, userID int) (*models.ChaoxingAccount, error)
 	UpdateChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
 	UnbindChaoxingAccount(ctx context.Context, userID int) error
+
+	// Group
+	NewGroup(ctx context.Context, group *models.Group) error
+	GetGroupByID(ctx context.Context, id int) (*models.Group, error)
+	UpdateGroup(ctx context.Context, group *models.Group) error
+	DeleteGroup(ctx context.Context, id int) error
+	GetGroupsByUserID(ctx context.Context, userID int) ([]*models.Group, error)
+
+	AddGroupMembership(ctx context.Context, member *models.GroupMembership) error
+	RemoveGroupMembership(ctx context.Context, groupID, userID int) error
+	UpdateGroupMembership(ctx context.Context, member *models.GroupMembership) error
+	GetGroupMemberships(ctx context.Context, groupID int) ([]*models.GroupMembership, error)
+	GetGroupMembership(ctx context.Context, groupID, userID int) (*models.GroupMembership, error)
+	GetGroupMembersByGroupID(ctx context.Context, groupID int) ([]*models.User, error)
 }

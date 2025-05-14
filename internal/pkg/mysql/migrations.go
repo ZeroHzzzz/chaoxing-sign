@@ -10,5 +10,7 @@ func autoMigrate(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.ChaoxingAccount{},
+		&models.Group{},
+		&models.GroupMembership{},
 	)
 }
