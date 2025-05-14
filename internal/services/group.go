@@ -2,15 +2,21 @@ package services
 
 import (
 	"chaoxing/internal/models"
+	"chaoxing/internal/pkg/utils"
 	"chaoxing/internal/pkg/xerr"
 	"context"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 func NewGroup(ctx context.Context, name string, captainID int) error {
-	// 创建分组
+	// 创建分组并生成邀请码
+	inviteCode := utils.GenerateInviteCode()
 	newGroup := &models.Group{
-		Name:      name,
-		CaptainID: captainID,
+		Name:       name,
+		CaptainID:  captainID,
+		InviteCode: inviteCode,
 	}
 
 	err := d.NewGroup(ctx, newGroup)
@@ -18,7 +24,14 @@ func NewGroup(ctx context.Context, name string, captainID int) error {
 		return err
 	}
 
-	return nil
+	// 创建群组的同时添加队长为成员
+	membership := &models.GroupMembership{
+		GroupID: newGroup.ID,
+		UserID:  captainID,
+		Role:    models.RoleTypeCaptain,
+	}
+
+	return d.AddGroupMembership(ctx, membership)
 }
 
 func GetGroupByGroupID(ctx context.Context, groupID int) (*models.Group, error) {
@@ -166,4 +179,39 @@ func CheckGroupCaptain(ctx context.Context, groupID, userID int) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// GetGroupByInviteCode 通过邀请码获取群组信息
+func GetGroupByInviteCode(ctx context.Context, inviteCode string) (*models.Group, error) {
+	return d.GetGroupByInviteCode(ctx, inviteCode)
+}
+
+// JoinGroupByInviteCode 通过邀请码加入群组
+func JoinGroupByInviteCode(ctx context.Context, inviteCode string, userID int) error {
+	// 获取群组信息
+	group, err := d.GetGroupByInviteCode(ctx, inviteCode)
+	if err != nil {
+		return err
+	}
+	if group == nil {
+		return xerr.GroupNotFound
+	}
+
+	// 检查用户是否已经在群组中
+	membership, err := d.GetGroupMembership(ctx, group.ID, userID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+	if membership != nil {
+		return xerr.AlreadyInGroup
+	}
+
+	// 添加成员
+	newMembership := &models.GroupMembership{
+		GroupID: group.ID,
+		UserID:  userID,
+		Role:    models.RoleTypeMember,
+	}
+
+	return d.AddGroupMembership(ctx, newMembership)
 }

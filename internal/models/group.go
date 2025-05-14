@@ -8,11 +8,12 @@ var (
 )
 
 type Group struct {
-	ID        int    `json:"id" gorm:"primaryKey"`
-	Name      string `json:"name" gorm:"unique;not null"`
-	CaptainID int    `json:"captain_id" gorm:"not null;index"`
-	CreatedAt int64  `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt int64  `json:"updated_at" gorm:"autoUpdateTime"`
+	ID         int    `json:"id" gorm:"primaryKey"`
+	Name       string `json:"name" gorm:"unique;not null"`
+	CaptainID  int    `json:"captain_id" gorm:"not null;index"`
+	InviteCode string `json:"invite_code" gorm:"unique;index"`
+	CreatedAt  int64  `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt  int64  `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 type GroupMembership struct {

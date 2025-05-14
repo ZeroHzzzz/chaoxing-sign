@@ -3,6 +3,9 @@ package dao
 import (
 	"chaoxing/internal/models"
 	"context"
+	"errors"
+
+	"gorm.io/gorm"
 )
 
 func (d *Dao) NewGroup(ctx context.Context, group *models.Group) error {
@@ -85,4 +88,16 @@ func (d *Dao) GetGroupMembersByGroupID(ctx context.Context, groupID int) ([]*mod
 		return nil, err
 	}
 	return members, nil
+}
+
+func (d *Dao) GetGroupByInviteCode(ctx context.Context, inviteCode string) (*models.Group, error) {
+	var group models.Group
+	err := d.DB.Where("invite_code = ?", inviteCode).First(&group).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &group, nil
 }

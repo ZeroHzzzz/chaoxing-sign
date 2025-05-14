@@ -35,6 +35,9 @@ var (
 	NotFound           = NewError(200404, log.LevelInfo, http.StatusText(http.StatusNotFound))
 
 	PremissionDenied = NewError(200403, log.LevelInfo, "无权限")
+
+	GroupNotFound  = NewError(200504, log.LevelInfo, "群组不存在")
+	AlreadyInGroup = NewError(200505, log.LevelInfo, "已经在群组中")
 )
 
 func (e *Error) Error() string {

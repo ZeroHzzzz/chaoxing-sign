@@ -45,6 +45,8 @@ func InitRouter() *gin.Engine {
 				groupGroup.DELETE("/:id/member/:member_id", user.RemoveGroupMember) // 移除分组成员
 				groupGroup.GET("/:id/members", user.GetGroupMembers)                // 获取分组成员列表
 				groupGroup.POST("/:id/transfer", user.TransferCaptain)              // 转移组长
+				groupGroup.GET("/:id/invite-code", user.GetGroupInviteCode)         // 获取群组邀请码
+				groupGroup.POST("/join", user.JoinGroupByInviteCode)                // 通过邀请码加入群组
 			}
 		}
 	}

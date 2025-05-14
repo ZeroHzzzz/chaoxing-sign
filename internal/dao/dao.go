@@ -58,6 +58,7 @@ type Daos interface {
 	UpdateGroup(ctx context.Context, group *models.Group) error
 	DeleteGroup(ctx context.Context, id int) error
 	GetGroupsByUserID(ctx context.Context, userID int) ([]*models.Group, error)
+	GetGroupByInviteCode(ctx context.Context, inviteCode string) (*models.Group, error)
 
 	AddGroupMembership(ctx context.Context, member *models.GroupMembership) error
 	RemoveGroupMembership(ctx context.Context, groupID, userID int) error

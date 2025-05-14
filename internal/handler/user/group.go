@@ -193,3 +193,49 @@ func TransferCaptain(c *gin.Context) {
 
 	utils.JsonSuccessResponse(c, nil)
 }
+
+// GetGroupInviteCode 获取群组邀请码
+func GetGroupInviteCode(c *gin.Context) {
+	groupID, _ := strconv.Atoi(c.Param("id"))
+
+	// 验证权限
+	userID := c.GetInt("userID")
+	isCaptain, err := services.CheckGroupCaptain(c, groupID, userID)
+	if err != nil {
+		xerr.AbortWithException(c, xerr.ServerErr, err)
+		return
+	}
+	if !isCaptain {
+		xerr.AbortWithException(c, xerr.PremissionDenied, nil)
+		return
+	}
+
+	group, err := services.GetGroupByGroupID(c, groupID)
+	if err != nil {
+		xerr.AbortWithException(c, xerr.ServerErr, err)
+		return
+	}
+
+	utils.JsonSuccessResponse(c, gin.H{
+		"invite_code": group.InviteCode,
+	})
+}
+
+// JoinGroupByInviteCode 通过邀请码加入群组
+func JoinGroupByInviteCode(c *gin.Context) {
+	var req struct {
+		InviteCode string `json:"invite_code" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		xerr.AbortWithException(c, xerr.ParamError, err)
+		return
+	}
+
+	userID := c.GetInt("userID")
+	if err := services.JoinGroupByInviteCode(c, req.InviteCode, userID); err != nil {
+		xerr.AbortWithException(c, xerr.ServerErr, err)
+		return
+	}
+
+	utils.JsonSuccessResponse(c, nil)
+}
