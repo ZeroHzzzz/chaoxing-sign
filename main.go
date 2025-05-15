@@ -4,12 +4,13 @@ import (
 	"chaoxing/internal/pkg/mysql"
 	"chaoxing/internal/pkg/redis"
 	"chaoxing/internal/pkg/resty"
-	"chaoxing/internal/router"
 	"chaoxing/internal/services"
+	"context"
+	"log"
 )
 
 // var ctx = context.Background()
-// var uname = "19033952880"
+var uname = "19033952880"
 
 func main() {
 	// rty := resty.GetRty()
@@ -116,6 +117,9 @@ func main() {
 	rdb := redis.GetRdb()
 	rty := resty.GetRty()
 	services.Init(db, rdb, rty)
-	r := router.InitRouter()
-	r.Run(":8080")
+	url := "https://mobilelearn.chaoxing.com/widget/sign/e?id=2000124711806&c=2000124711806&enc=9BBD13396668E1F461BA1A7064847F3B&DB_STRATEGY=PRIMARY_KEY&STRATEGY_PARA=id"
+	status := services.Test(context.Background(), uname, "Zhz050108", url)
+	log.Println(status)
+	// r := router.InitRouter()
+	// r.Run(":8080")
 }

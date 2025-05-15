@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"strconv"
 )
 
@@ -420,18 +421,55 @@ func (c *Chaoxing) GetPPTActivityInfo(ctx context.Context, cookie models.Chaoxin
 	return nil
 }
 
-func (c *Chaoxing) ScanQrcodeSign(ctx context.Context, cookie models.ChaoxingCookieType, url string) bool {
+func (c *Chaoxing) ScanQrcodeSign(ctx context.Context, cookie models.ChaoxingCookieType, qrcodeUrl string) bool {
+	prasedQrcodeUrl, err := url.ParseQuery(qrcodeUrl)
+	if err != nil {
+		return false
+	}
+
 	r, err := c.Rty.R().
 		SetCookies(cookie.ToCookies()).
 		SetHeader("User-Agent", globals.UserAgent).
-		Get(url)
-	if r.StatusCode() != 302 {
-		return false
-	}
-	if err != nil {
+		Get(qrcodeUrl)
+
+	// resty禁止重定向的时候会抛出err，因此这里得进行处理
+	if err != nil && r.StatusCode() != 302 {
 		log.Printf("[ScanQrcodeSign] 签到失败: %v\n", err)
 		return false
 	}
 
-	return true
+	redirectUrl := r.Header().Get("Location")
+	if redirectUrl == "" {
+		log.Println("[ScanQrcodeSign] 签到失败: 重定向 URL 为空")
+		return false
+	}
+
+	// 解析重定向的 URL
+	parsedRedirectUrl, err := url.ParseQuery(redirectUrl)
+	if err != nil {
+		log.Printf("[ScanQrcodeSign] 签到失败: 解析重定向 URL 失败: %v\n", err)
+		return false
+	}
+
+	act := models.ActivityType{
+		ActivityID: parsedRedirectUrl.Get("activePrimaryId"),
+		Course: models.CourseType{
+			CourseID: parsedRedirectUrl.Get("courseId"),
+			ClassID:  parsedRedirectUrl.Get("classId"),
+		},
+	}
+
+	status := c.PreSign(ctx, cookie, act)
+	if !status {
+		log.Println("[ScanQrcodeSign] 签到失败: 预签到失败")
+		return false
+	}
+
+	username, err := c.GetUserName(ctx, cookie)
+	if err != nil {
+		log.Println("[ScanQrcodeSign] 签到失败: 获取用户名失败")
+		return false
+	}
+	status = c.QrcodeSign(ctx, cookie, models.LocationType{}, prasedQrcodeUrl.Get("enc"), username, act.ActivityID)
+	return status
 }

@@ -24,7 +24,8 @@ func initRty() {
 		// 设置连接超时
 		SetTimeout(10 * time.Second).
 		// SetRedirectPolicy(resty.NoRedirectPolicy()).
-		SetCookieJar(nil)
+		SetCookieJar(nil).
+		SetRedirectPolicy(resty.NoRedirectPolicy())
 	client.OnAfterResponse(RestyLogMiddleware)
 }
 
