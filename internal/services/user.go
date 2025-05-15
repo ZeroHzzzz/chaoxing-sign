@@ -54,13 +54,14 @@ func BindChaoxingAccount(ctx context.Context, userID int, phone, password string
 
 	// 创建超星账号记录
 	account := &models.ChaoxingAccount{
-		Phone: phone,
-		Pass:  password,
-		Name:  name,
+		UserID: userID,
+		Phone:  phone,
+		Pass:   password,
+		Name:   name,
 	}
 
 	// 绑定账号
-	err = d.BindChaoxingAccount(ctx, userID, account)
+	err = d.BindChaoxingAccount(ctx, account)
 	if err != nil {
 		return err
 	}
@@ -68,17 +69,7 @@ func BindChaoxingAccount(ctx context.Context, userID int, phone, password string
 	return nil
 }
 
-func GetUserChaoxingAccount(ctx context.Context, userID int) (*models.ChaoxingAccount, error) {
-	return d.GetUserChaoxingAccount(ctx, userID)
-}
-
 func UpdateChaoxingAccount(ctx context.Context, userID int, phone, password string) error {
-	// 获取现有账号信息
-	account, err := d.GetUserChaoxingAccount(ctx, userID)
-	if err != nil {
-		return err
-	}
-
 	// 验证新账号信息
 	cookie, err := c.LoginByPass(ctx, phone, password)
 	if err != nil {
@@ -92,15 +83,44 @@ func UpdateChaoxingAccount(ctx context.Context, userID int, phone, password stri
 	}
 
 	// 更新账号信息
-	account.Phone = phone
-	account.Pass = password
-	account.Name = name
+	account := &models.ChaoxingAccount{
+		UserID: userID,
+		Phone:  phone,
+		Pass:   password,
+		Name:   name,
+	}
 
 	return d.UpdateChaoxingAccount(ctx, account)
 }
 
-func UnbindChaoxingAccount(ctx context.Context, userID int) error {
-	return d.UnbindChaoxingAccount(ctx, userID)
+func GetUserBindChaoxingAccounts(ctx context.Context, userID int, page, pageSize int) ([]*models.ChaoxingAccount, int64, error) {
+	// 获取绑定的超星账号列表
+	accounts, totalCount, err := d.GetUserChaoxingAccounts(ctx, userID, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return accounts, totalCount, nil
+}
+
+func GetUserChaoxingAccountByPhone(ctx context.Context, phone string, userID int) (*models.ChaoxingAccount, error) {
+	// 获取绑定的超星账号
+	account, err := d.GetUserChaoxingAccountByPhone(ctx, phone, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return account, nil
+}
+
+func DeleteUserChaoxingAccounts(ctx context.Context, userID int) error {
+	// 删除用户绑定的超星账号
+	return d.DeleteUserChaoxingAccounts(ctx, userID)
+}
+
+func UnbindChaoxingAccount(ctx context.Context, userID int, accountID string) error {
+	// 解除绑定
+	return d.UnbindChaoxingAccount(ctx, userID, accountID)
 }
 
 // ValidateUser 验证用户token并获取用户信息
@@ -110,6 +130,10 @@ func UnbindChaoxingAccount(ctx context.Context, userID int) error {
 // 	if err != nil {
 // 		return nil, xerr.NotLoginErr
 // 	}
+
+// 	// 获取用户信息
+// 	user, err := d.GetUserByID(ctx, claims.ID)
+// 	if err != nil {
 
 // 	// 获取用户信息
 // 	user, err := d.GetUserByID(ctx, claims.ID)

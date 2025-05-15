@@ -46,10 +46,12 @@ type Daos interface {
 	DeleteUserByPass(ctx context.Context, ID int, password string) error
 
 	// 超星账号相关
-	BindChaoxingAccount(ctx context.Context, userID int, account *models.ChaoxingAccount) error
-	GetUserChaoxingAccount(ctx context.Context, userID int) (*models.ChaoxingAccount, error)
+	BindChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
+	GetUserChaoxingAccountByPhone(ctx context.Context, phone string, userID int) (*models.ChaoxingAccount, error)
+	GetUserChaoxingAccounts(ctx context.Context, userID int, page, pageSize int) ([]*models.ChaoxingAccount, int64, error)
 	UpdateChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error
-	UnbindChaoxingAccount(ctx context.Context, userID int) error
+	DeleteUserChaoxingAccounts(ctx context.Context, userID int) error
+	UnbindChaoxingAccount(ctx context.Context, userID int, accountID string) error
 
 	// Group
 	NewGroup(ctx context.Context, group *models.Group) error

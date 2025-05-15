@@ -126,28 +126,3 @@ func (d *Dao) DeleteUser(ctx context.Context, id int) error {
 func (d *Dao) DeleteUserByPass(ctx context.Context, ID int, password string) error {
 	return d.DB.Where("id = ? AND password = ?", ID, password).Delete(&models.User{}).Error
 }
-
-func (d *Dao) BindChaoxingAccount(ctx context.Context, userID int, account *models.ChaoxingAccount) error {
-	account.UserID = userID
-	return d.DB.Create(account).Error
-}
-
-func (d *Dao) UnbindChaoxingAccount(ctx context.Context, userID int) error {
-	return d.DB.Where("user_id = ?", userID).Delete(&models.ChaoxingAccount{}).Error
-}
-
-func (d *Dao) UpdateChaoxingAccount(ctx context.Context, account *models.ChaoxingAccount) error {
-	return d.DB.Save(account).Error
-}
-
-func (d *Dao) GetUserChaoxingAccount(ctx context.Context, userID int) (*models.ChaoxingAccount, error) {
-	var account models.ChaoxingAccount
-	err := d.DB.Where("user_id = ?", userID).First(&account).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return &account, nil
-}

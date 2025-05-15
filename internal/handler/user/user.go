@@ -77,18 +77,6 @@ func BindChaoxingAccount(c *gin.Context) {
 	utils.JsonSuccessResponse(c, nil)
 }
 
-func GetChaoxingAccount(c *gin.Context) {
-	userID := c.GetInt("user_id") // 从JWT中获取
-
-	account, err := services.GetUserChaoxingAccount(c, userID)
-	if err != nil {
-		xerr.AbortWithException(c, xerr.ChaoxingOperateErr, err)
-		return
-	}
-
-	utils.JsonSuccessResponse(c, account)
-}
-
 func UpdateChaoxingAccount(c *gin.Context) {
 	var req bindChaoxingReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -105,10 +93,52 @@ func UpdateChaoxingAccount(c *gin.Context) {
 	utils.JsonSuccessResponse(c, nil)
 }
 
-func UnbindChaoxingAccount(c *gin.Context) {
-	userID := c.GetInt("user_id") // 从JWT中获取
+func GetChaoxingAccounts(c *gin.Context) {
+	userID := c.GetInt("userID")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
 
-	if err := services.UnbindChaoxingAccount(c, userID); err != nil {
+	accounts, total, err := services.GetUserBindChaoxingAccounts(c, userID, page, pageSize)
+	if err != nil {
+		xerr.AbortWithException(c, xerr.ChaoxingOperateErr, err)
+		return
+	}
+
+	utils.JsonSuccessResponse(c, gin.H{
+		"total": total,
+		"list":  accounts,
+	})
+}
+
+func UnbindChaoxingAccount(c *gin.Context) {
+	accountID := c.Param("id")
+	userID := c.GetInt("userID")
+
+	if err := services.UnbindChaoxingAccount(c, userID, accountID); err != nil {
+		xerr.AbortWithException(c, xerr.ChaoxingOperateErr, err)
+		return
+	}
+
+	utils.JsonSuccessResponse(c, nil)
+}
+
+func GetUserChaoxingAccountByPhone(c *gin.Context) {
+	phone := c.Param("phone")
+	userID := c.GetInt("userID")
+
+	account, err := services.GetUserChaoxingAccountByPhone(c, phone, userID)
+	if err != nil {
+		xerr.AbortWithException(c, xerr.ChaoxingOperateErr, err)
+		return
+	}
+
+	utils.JsonSuccessResponse(c, account)
+}
+
+func DeleteUserChaoxingAccounts(c *gin.Context) {
+	userID := c.GetInt("userID")
+
+	if err := services.DeleteUserChaoxingAccounts(c, userID); err != nil {
 		xerr.AbortWithException(c, xerr.ChaoxingOperateErr, err)
 		return
 	}
